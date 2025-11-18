@@ -37,11 +37,8 @@ const Agents: React.FC = () => {
     try {
       setActionLoading(agentId);
       
-      // Emit through socket for real-time updates
-      emitAgentAction(agentId, action);
-      
-      // Also call API
-      await agentService.executeAgentAction(agentId, action);
+      // Use socket context which handles both WebSocket and HTTP for Netlify
+      await emitAgentAction(agentId, action);
       
       // Reload agents to get updated data
       setTimeout(loadAgents, 1000);

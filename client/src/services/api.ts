@@ -69,7 +69,7 @@ export const agentService = {
     api.post('/agents', agentData).then(res => res.data),
     
   executeAgentAction: (agentId: string, action: string): Promise<ApiResponse<Agent>> =>
-    api.put(`/agents/${agentId}/action`, { action }).then(res => res.data),
+    api.post(`/agents/${agentId}/action`, { action }).then(res => res.data),
     
   updateAgentMetrics: (agentId: string, metrics: Partial<Agent['metrics']>): Promise<ApiResponse<Agent>> =>
     api.put(`/agents/${agentId}/metrics`, metrics).then(res => res.data),
