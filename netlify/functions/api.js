@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 const demoService = new NetlifySimulationService();
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -32,45 +32,47 @@ app.get('/api/health', (req, res) => {
 });
 
 // Rutas de agentes
-app.get('/api/agents', (req, res) => {
+app.get('/agents', (req, res) => {
   const agents = demoService.getAgents();
   res.json(agents);
 });
 
-app.post('/api/agents/initialize', (req, res) => {
+app.post('/agents/initialize', (req, res) => {
   const result = demoService.initializeAgents();
   res.json(result);
 });
 
 // Rutas de alertas
-app.get('/api/alerts', (req, res) => {
+app.get('/alerts', (req, res) => {
   const alerts = demoService.getAlerts();
-  res.json(alerts);
+  const limit = req.query.limit ? parseInt(req.query.limit) : alerts.length;
+  const limitedAlerts = alerts.slice(0, limit);
+  res.json(limitedAlerts);
 });
 
 // Rutas de simulación
-app.get('/api/simulation/status', (req, res) => {
+app.get('/simulation/status', (req, res) => {
   const status = demoService.getSimulationStatus();
   res.json(status);
 });
 
-app.post('/api/simulation/start', (req, res) => {
+app.post('/simulation/start', (req, res) => {
   const result = demoService.startSimulation();
   res.json(result);
 });
 
-app.post('/api/simulation/stop', (req, res) => {
+app.post('/simulation/stop', (req, res) => {
   const result = demoService.stopSimulation();
   res.json(result);
 });
 
-app.post('/api/simulation/restart', (req, res) => {
+app.post('/simulation/restart', (req, res) => {
   const result = demoService.restartSimulation();
   res.json(result);
 });
 
 // Rutas de dashboard
-app.get('/api/dashboard', (req, res) => {
+app.get('/dashboard', (req, res) => {
   const stats = demoService.getSystemStats();
   res.json(stats);
 });
