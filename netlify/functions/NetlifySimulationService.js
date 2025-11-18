@@ -26,26 +26,50 @@ class NetlifySimulationService {
   // Generar agentes con datos dinámicos basados en timestamp
   getAgents() {
     const now = Date.now();
+    const minutesSeed = Math.floor(now / 30000); // Cambia cada 30 segundos
+    
     return this.agentTypes.map((agent, index) => {
       // Usar timestamp para generar datos "aleatorios" pero consistentes
-      const seed = now + index * 1000;
-      const activityLevel = Math.sin(seed / 10000) * 50 + 50; // 0-100
-      const threatsDetected = Math.floor(Math.sin(seed / 5000) * 10 + 15); // 5-25
-      const lastActivity = new Date(now - (Math.abs(Math.sin(seed)) * 3600000)); // Última hora
+      const seed = minutesSeed + index * 1000;
+      const activityLevel = Math.sin(seed / 100) * 50 + 50; // 0-100
+      const threatsDetected = Math.floor(Math.sin(seed / 50) * 10 + 15); // 5-25
+      const lastActivity = new Date(now - (Math.abs(Math.sin(seed)) * 1800000)); // Últimos 30 minutos
+
+      // Estados dinámicos de agentes
+      const statusOptions = ['active', 'investigating', 'responding', 'idle', 'scanning'];
+      const currentStatus = statusOptions[Math.abs(Math.floor(Math.sin(seed * 1.1) * statusOptions.length))];
+      
+      // Actividades dinámicas
+      const activities = [
+        'Monitoring network traffic',
+        'Analyzing suspicious activity', 
+        'Scanning for vulnerabilities',
+        'Processing security alerts',
+        'Updating threat database',
+        'Performing system checks',
+        'Investigating anomaly',
+        'Blocking malicious IP',
+        'Generating security report',
+        'Coordinating with other agents'
+      ];
+      const currentActivity = activities[Math.abs(Math.floor(Math.sin(seed * 1.3) * activities.length))];
 
       return {
         id: agent.id,
         name: agent.name,
         type: agent.id,
-        status: agent.status,
+        status: currentStatus,
         activity_level: Math.round(activityLevel),
         threats_detected: threatsDetected,
         last_activity: lastActivity.toISOString(),
-        location: this.locations[index],
+        current_activity: currentActivity,
+        location: this.locations[index % this.locations.length],
         version: '2.1.0',
         uptime: Math.floor(now / 1000) % 86400, // Segundos del día
-        cpu_usage: Math.round(Math.sin(seed / 7000) * 20 + 30), // 10-50%
-        memory_usage: Math.round(Math.sin(seed / 8000) * 30 + 40) // 10-70%
+        cpu_usage: Math.round(Math.sin(seed / 70) * 20 + 30), // 10-50%
+        memory_usage: Math.round(Math.sin(seed / 80) * 30 + 40), // 10-70%
+        response_time: Math.round(Math.sin(seed / 60) * 100 + 150), // 50-250ms
+        alerts_processed: Math.floor(Math.sin(seed / 40) * 50 + 100) // 50-150
       };
     });
   }
@@ -54,27 +78,59 @@ class NetlifySimulationService {
   getAlerts() {
     const now = Date.now();
     const alerts = [];
-    const alertCount = 8; // Número fijo de alertas
+    const minutesSeed = Math.floor(now / 30000); // Cambiar cada 30 segundos
+    const alertCount = 6 + Math.abs(Math.floor(Math.sin(minutesSeed) * 6)); // 6-12 alertas
 
     for (let i = 0; i < alertCount; i++) {
-      const seed = now + i * 2000;
+      const seed = now + i * 2000 + minutesSeed * 1000;
       const severities = ['low', 'medium', 'high', 'critical'];
-      const statuses = ['active', 'investigating', 'resolved'];
+      const statuses = ['active', 'investigating', 'resolved', 'mitigating'];
       
       const severity = severities[Math.abs(Math.floor(Math.sin(seed) * 4)) % 4];
-      const status = statuses[Math.abs(Math.floor(Math.sin(seed * 1.1) * 3)) % 3];
-      const threat = this.threatTypes[Math.abs(Math.floor(Math.sin(seed * 1.2) * this.threatTypes.length)) % this.threatTypes.length];
+      const status = statuses[Math.abs(Math.floor(Math.sin(seed * 1.1) * 4)) % 4];
+      
+      // Más variedad en tipos de amenazas
+      const extendedThreatTypes = [
+        'DDoS Attack',
+        'Malware',
+        'SQL Injection', 
+        'Phishing',
+        'Brute Force',
+        'Crypto Mining',
+        'Data Breach',
+        'Ransomware',
+        'Zero-Day Exploit',
+        'Port Scan',
+        'DNS Poisoning',
+        'XSS Attack',
+        'MITM Attack',
+        'Backdoor',
+        'Privilege Escalation'
+      ];
+      
+      const threat = extendedThreatTypes[Math.abs(Math.floor(Math.sin(seed * 1.2) * extendedThreatTypes.length)) % extendedThreatTypes.length];
       const source = this.locations[Math.abs(Math.floor(Math.sin(seed * 1.3) * this.locations.length)) % this.locations.length];
       const agent = this.agentTypes[Math.abs(Math.floor(Math.sin(seed * 1.4) * this.agentTypes.length)) % this.agentTypes.length];
 
-      // Timestamp para que las alertas cambien cada minuto
-      const minutesSeed = Math.floor(now / 60000);
-      const alertTime = new Date(now - (Math.abs(Math.sin(seed + minutesSeed)) * 7200000)); // Últimas 2 horas
+      // Timestamp que cambie más dinámicamente
+      const alertTime = new Date(now - (Math.abs(Math.sin(seed + minutesSeed * 100)) * 3600000)); // Última hora
+
+      // Descripciones más variadas
+      const descriptions = [
+        `${severity.charAt(0).toUpperCase() + severity.slice(1)} ${threat.toLowerCase()} detected from ${source}`,
+        `Agent ${agent.name} identified suspicious ${threat.toLowerCase()} activity`,
+        `Multiple ${threat.toLowerCase()} attempts blocked from ${source}`,
+        `Automated response triggered for ${threat.toLowerCase()}`,
+        `${threat} attack pattern recognized and mitigated`,
+        `Security breach attempt via ${threat.toLowerCase()} neutralized`
+      ];
+
+      const description = descriptions[Math.abs(Math.floor(Math.sin(seed * 1.5) * descriptions.length)) % descriptions.length];
 
       alerts.push({
-        id: `alert-${i + 1}`,
+        id: `alert-${minutesSeed}-${i + 1}`,
         title: `${threat} Detected`,
-        description: `${severity.charAt(0).toUpperCase() + severity.slice(1)} threat detected by ${agent.name}`,
+        description,
         severity,
         status,
         source,
@@ -84,7 +140,9 @@ class NetlifySimulationService {
         confidence: Math.round(Math.sin(seed * 1.5) * 20 + 80), // 60-100%
         risk_score: Math.round(Math.sin(seed * 1.6) * 40 + 30), // 10-70%
         affected_systems: [source],
-        mitigation_status: status === 'resolved' ? 'completed' : 'in_progress'
+        mitigation_status: status === 'resolved' ? 'completed' : 'in_progress',
+        source_ip: this.getRandomIP(seed),
+        attempts_blocked: Math.floor(Math.sin(seed * 1.7) * 100 + 1)
       });
     }
 
@@ -175,6 +233,25 @@ class NetlifySimulationService {
 
   getUptime() {
     return Math.floor((Date.now() % (24 * 3600000)) / 1000);
+  }
+
+  // Generar IP aleatoria para demo
+  getRandomIP(seed) {
+    const a = Math.abs(Math.floor(Math.sin(seed) * 255));
+    const b = Math.abs(Math.floor(Math.sin(seed * 1.1) * 255));
+    const c = Math.abs(Math.floor(Math.sin(seed * 1.2) * 255));
+    const d = Math.abs(Math.floor(Math.sin(seed * 1.3) * 255));
+    return `${a}.${b}.${c}.${d}`;
+  }
+
+  // Generar país aleatorio para demo
+  getRandomCountry(seed) {
+    const countries = [
+      'United States', 'China', 'Russia', 'Germany', 'Brazil', 
+      'India', 'France', 'United Kingdom', 'Turkey', 'Iran',
+      'North Korea', 'Netherlands', 'Canada', 'Australia', 'Japan'
+    ];
+    return countries[Math.abs(Math.floor(Math.sin(seed * 2.1) * countries.length)) % countries.length];
   }
 }
 
