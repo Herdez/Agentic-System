@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { useToast } from '../contexts/ToastContext';
+import { simulationService } from '../services/api';
 
 interface SimulationStats {
   isRunning: boolean;
@@ -18,8 +19,11 @@ const SimulationControl = () => {
   const { addToast } = useToast();
 
   useEffect(() => {
+    // Obtener estado inicial siempre
+    fetchSimulationStatus();
+
     if (socket) {
-      // Escuchar actualizaciones de la simulación
+      // Si hay WebSocket, escuchar actualizaciones en tiempo real
       socket.on('simulation-status', (data: { running: boolean }) => {
         setIsRunning(data.running);
       });
@@ -28,65 +32,82 @@ const SimulationControl = () => {
         setStats(data);
       });
 
-      // Obtener estado inicial
-      fetchSimulationStatus();
-
       return () => {
         socket.off('simulation-status');
         socket.off('simulation_update');
       };
+    } else {
+      // Si no hay WebSocket (Netlify), usar polling
+      const interval = setInterval(fetchSimulationStatus, 15000); // Cada 15 segundos
+      return () => clearInterval(interval);
     }
   }, [socket]);
 
   const fetchSimulationStatus = async () => {
     try {
-      const response = await fetch('/api/simulation/status');
-      const data = await response.json();
-      if (data.success) {
-        setStats(data.data);
-        setIsRunning(data.data?.isRunning || false);
+      const response = await simulationService.getStatus();
+      if (response.success || response) {
+        // Manejar tanto respuesta con .success como respuesta directa
+        const data = response.success ? response.data : response;
+        setStats(data);
+        setIsRunning(data?.isRunning || false);
       }
     } catch (error) {
       console.error('Error obteniendo estado de simulación:', error);
     }
   };
 
-  const handleStartSimulation = () => {
-    if (socket) {
-      socket.emit('start-simulation');
+  const handleStartSimulation = async () => {
+    try {
+      const response = await simulationService.start();
       addToast({
         type: 'success',
         title: 'Simulación iniciada',
         message: 'La simulación de agentes ha comenzado exitosamente'
       });
+      setIsRunning(true);
+      // Actualizar estado después de iniciar
+      setTimeout(fetchSimulationStatus, 1000);
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo iniciar la simulación'
+      });
     }
   };
 
-  const handleStopSimulation = () => {
-    if (socket) {
-      socket.emit('stop-simulation');
+  const handleStopSimulation = async () => {
+    try {
+      const response = await simulationService.stop();
       addToast({
         type: 'info',
         title: 'Simulación detenida',
         message: 'La simulación de agentes ha sido pausada'
+      });
+      setIsRunning(false);
+      // Actualizar estado después de detener
+      setTimeout(fetchSimulationStatus, 1000);
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo detener la simulación'
       });
     }
   };
 
   const handleRestartSimulation = async () => {
     try {
-      const response = await fetch('/api/simulation/restart', { method: 'POST' });
-      const data = await response.json();
-      if (data.success) {
-        addToast({
-          type: 'success',
-          title: 'Simulación reiniciada',
-          message: 'La simulación ha sido reiniciada correctamente'
-        });
-        setTimeout(() => {
-          setIsRunning(true);
-        }, 1000);
-      }
+      const response = await simulationService.restart();
+      addToast({
+        type: 'success',
+        title: 'Simulación reiniciada',
+        message: 'La simulación ha sido reiniciada correctamente'
+      });
+      setIsRunning(true);
+      // Actualizar estado después de reiniciar
+      setTimeout(fetchSimulationStatus, 1000);
     } catch (error) {
       addToast({
         type: 'error',

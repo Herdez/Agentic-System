@@ -201,4 +201,19 @@ export const healthService = {
     api.get('/health').then(res => res.data),
 };
 
+// Servicios de Simulación
+export const simulationService = {
+  getStatus: (): Promise<ApiResponse<any>> =>
+    api.get('/simulation/status').then(res => res.data),
+    
+  start: (): Promise<ApiResponse<any>> =>
+    api.post('/simulation/start').then(res => res.data),
+    
+  stop: (): Promise<ApiResponse<any>> =>
+    api.post('/simulation/stop').then(res => res.data),
+    
+  restart: (): Promise<ApiResponse<any>> =>
+    api.post('/simulation/restart').then(res => res.data),
+};
+
 export default api;
