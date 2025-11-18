@@ -46,9 +46,9 @@ const SimulationControl = () => {
   const fetchSimulationStatus = async () => {
     try {
       const response = await simulationService.getStatus();
-      if (response.success || response) {
-        // Manejar tanto respuesta con .success como respuesta directa
-        const data = response.success ? response.data : response;
+      // Manejar tanto respuesta con .success como respuesta directa
+      const data = response?.success ? response.data : (response?.data || response);
+      if (data) {
         setStats(data);
         setIsRunning(data?.isRunning || false);
       }

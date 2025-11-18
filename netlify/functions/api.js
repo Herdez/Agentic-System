@@ -26,26 +26,41 @@ exports.handler = async (event, context) => {
     if (method === 'GET') {
       if (path === '/health' || path.endsWith('/health')) {
         response = {
-          status: 'OK',
-          timestamp: new Date().toISOString(),
-          environment: 'netlify-serverless',
-          mode: 'stateless-simulation',
-          version: '1.0.0'
+          success: true,
+          data: {
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            environment: 'netlify-serverless',
+            mode: 'stateless-simulation',
+            version: '1.0.0'
+          }
         };
       }
       else if (path === '/agents' || path.endsWith('/agents')) {
-        response = demoService.getAgents();
+        response = {
+          success: true,
+          data: demoService.getAgents()
+        };
       }
       else if (path === '/alerts' || path.endsWith('/alerts')) {
         const alerts = demoService.getAlerts();
         const limit = query?.limit ? parseInt(query.limit) : alerts.length;
-        response = alerts.slice(0, limit);
+        response = {
+          success: true,
+          data: alerts.slice(0, limit)
+        };
       }
       else if (path === '/dashboard' || path.endsWith('/dashboard')) {
-        response = demoService.getSystemStats();
+        response = {
+          success: true,
+          data: demoService.getSystemStats()
+        };
       }
       else if (path === '/simulation/status' || path.endsWith('/simulation/status')) {
-        response = demoService.getSimulationStatus();
+        response = {
+          success: true,
+          data: demoService.getSimulationStatus()
+        };
       }
       else {
         return {
@@ -58,16 +73,28 @@ exports.handler = async (event, context) => {
     // Rutas POST
     else if (method === 'POST') {
       if (path === '/agents/initialize' || path.endsWith('/agents/initialize')) {
-        response = demoService.initializeAgents();
+        response = {
+          success: true,
+          data: demoService.initializeAgents()
+        };
       }
       else if (path === '/simulation/start' || path.endsWith('/simulation/start')) {
-        response = demoService.startSimulation();
+        response = {
+          success: true,
+          data: demoService.startSimulation()
+        };
       }
       else if (path === '/simulation/stop' || path.endsWith('/simulation/stop')) {
-        response = demoService.stopSimulation();
+        response = {
+          success: true,
+          data: demoService.stopSimulation()
+        };
       }
       else if (path === '/simulation/restart' || path.endsWith('/simulation/restart')) {
-        response = demoService.restartSimulation();
+        response = {
+          success: true,
+          data: demoService.restartSimulation()
+        };
       }
       else {
         return {

@@ -45,16 +45,23 @@ const Dashboard: React.FC = () => {
       const responses = await Promise.all(promises);
       const [statsResponse, agentsResponse, alertsResponse] = responses;
 
-      if (statsResponse.success) {
-        setSystemStats(statsResponse.data);
+      if (statsResponse.success || statsResponse.data || statsResponse) {
+        const statsData = statsResponse.success ? statsResponse.data : (statsResponse.data || statsResponse);
+        setSystemStats(statsData);
       }
       
-      if (isNetlify && agentsResponse && agentsResponse.success) {
-        setPolledAgents(agentsResponse.data);
+      if (isNetlify && agentsResponse) {
+        const agentsData = agentsResponse.success ? agentsResponse.data : (agentsResponse.data || agentsResponse);
+        if (agentsData) {
+          setPolledAgents(agentsData);
+        }
       }
       
-      if (isNetlify && alertsResponse && alertsResponse.success) {
-        setPolledAlerts(alertsResponse.data);
+      if (isNetlify && alertsResponse) {
+        const alertsData = alertsResponse.success ? alertsResponse.data : (alertsResponse.data || alertsResponse);
+        if (alertsData) {
+          setPolledAlerts(alertsData);
+        }
       }
       
       setLastUpdate(new Date());
