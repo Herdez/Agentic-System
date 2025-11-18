@@ -153,9 +153,27 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
   }, []);
 
-  const emitAgentAction = useCallback((agentId: string, action: string) => {
+  const emitAgentAction = useCallback(async (agentId: string, action: string) => {
     if (IS_NETLIFY) {
-      console.log('🌐 Netlify: Acción de agente no enviada (WebSockets deshabilitados):', { agentId, action });
+      console.log('🌐 Netlify: Enviando acción de agente via HTTP:', { agentId, action });
+      
+      try {
+        const response = await fetch(`/.netlify/functions/api/agents/${agentId}/action`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action })
+        });
+        
+        if (response.ok) {
+          console.log('✅ Acción de agente ejecutada exitosamente');
+        } else {
+          console.error('❌ Error ejecutando acción de agente:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Error ejecutando acción de agente:', error);
+      }
       return;
     }
     

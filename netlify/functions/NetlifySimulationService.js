@@ -35,9 +35,11 @@ class NetlifySimulationService {
       const threatsDetected = Math.floor(Math.sin(seed / 50) * 10 + 15); // 5-25
       const lastActivity = new Date(now - (Math.abs(Math.sin(seed)) * 1800000)); // Últimos 30 minutos
 
-      // Estados dinámicos de agentes
+      // Estados dinámicos de agentes - preferir "active" al inicio
       const statusOptions = ['active', 'investigating', 'responding', 'idle', 'scanning'];
-      const currentStatus = statusOptions[Math.abs(Math.floor(Math.sin(seed * 1.1) * statusOptions.length))];
+      const statusIndex = Math.abs(Math.floor(Math.sin(seed * 1.1) * statusOptions.length));
+      // Hacer que al menos 5 de 7 agentes estén activos al inicio
+      const currentStatus = (index < 5) ? 'active' : statusOptions[statusIndex];
       
       // Actividades dinámicas
       const activities = [
@@ -56,20 +58,28 @@ class NetlifySimulationService {
 
       return {
         id: agent.id,
+        _id: agent.id, // Para compatibilidad con componentes React
         name: agent.name,
         type: agent.id,
         status: currentStatus,
         activity_level: Math.round(activityLevel),
         threats_detected: threatsDetected,
         last_activity: lastActivity.toISOString(),
+        lastActivity: lastActivity.toISOString(), // Alias adicional
         current_activity: currentActivity,
+        description: agent.description,
         location: this.locations[index % this.locations.length],
         version: '2.1.0',
         uptime: Math.floor(now / 1000) % 86400, // Segundos del día
         cpu_usage: Math.round(Math.sin(seed / 70) * 20 + 30), // 10-50%
         memory_usage: Math.round(Math.sin(seed / 80) * 30 + 40), // 10-70%
         response_time: Math.round(Math.sin(seed / 60) * 100 + 150), // 50-250ms
-        alerts_processed: Math.floor(Math.sin(seed / 40) * 50 + 100) // 50-150
+        alerts_processed: Math.floor(Math.sin(seed / 40) * 50 + 100), // 50-150
+        metrics: {
+          uptime: Math.round(95 + Math.sin(seed / 90) * 5), // 95-100%
+          responseTime: Math.round((Math.sin(seed / 60) * 0.5 + 0.3) * 100) / 100, // 0.1-0.8s
+          accuracy: Math.round(90 + Math.sin(seed / 100) * 10) // 90-100%
+        }
       };
     });
   }

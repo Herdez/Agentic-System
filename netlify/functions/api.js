@@ -96,6 +96,29 @@ exports.handler = async (event, context) => {
           data: demoService.restartSimulation()
         };
       }
+      else if (path.includes('/agents/') && path.includes('/action')) {
+        // Manejar acciones de agentes: /agents/:agentId/action
+        const agentId = path.split('/agents/')[1]?.split('/action')[0];
+        
+        let actionData = {};
+        try {
+          actionData = body ? JSON.parse(body) : {};
+        } catch (e) {
+          actionData = {};
+        }
+
+        response = {
+          success: true,
+          data: {
+            message: `Acción ${actionData.action || 'unknown'} ejecutada para agente ${agentId}`,
+            agentId: agentId,
+            action: actionData.action || 'unknown',
+            timestamp: new Date().toISOString(),
+            result: 'completed',
+            mode: 'netlify-stateless'
+          }
+        };
+      }
       else {
         return {
           statusCode: 404,
