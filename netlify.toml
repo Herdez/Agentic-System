@@ -1,15 +1,21 @@
-# Configuración para Netlify
-version: 1
-build:
-  publish: client/build
-  command: npm run build:netlify
-functions:
-  api:
-    directory: server
-redirects:
-  - from: /api/*
-    to: /.netlify/functions/api/:splat
-    status: 200
-  - from: /*
-    to: /index.html
-    status: 200
+[build]
+  publish = "client/build"
+  command = "npm run build:netlify"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--production=false"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
