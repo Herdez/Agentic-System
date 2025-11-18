@@ -1,34 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
-import { agentService } from '../services/api';
+import { agentService, alertService } from '../services/api';
 import { Agent, SystemStats, Alert } from '../types';
 import { Shield, Activity, AlertTriangle, TrendingUp, Users, Eye, RefreshCw } from 'lucide-react';
 import SimulationControl from '../components/SimulationControl';
 
 const Dashboard: React.FC = () => {
   const { state: authState } = useAuth();
-  const { alerts, agents, isConnected } = useSocket();
+  const { alerts: socketAlerts, agents: socketAgents, isConnected } = useSocket();
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
+  const [polledAgents, setPolledAgents] = useState<Agent[]>([]);
+  const [polledAlerts, setPolledAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
+  // Detectar si estamos en Netlify (sin WebSockets)
+  const isNetlify = !isConnected && window.location.hostname.includes('netlify');
+  
+  // Usar datos del WebSocket si está conectado, sino usar datos de polling
+  const agents = isConnected ? socketAgents : polledAgents;
+  const alerts = isConnected ? socketAlerts : polledAlerts;
+
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 30000); // Actualizar cada 30 segundos
+    // En Netlify, actualizar más frecuentemente para simular tiempo real
+    const interval = setInterval(loadDashboardData, isNetlify ? 10000 : 30000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [isNetlify]);
 
   const loadDashboardData = async () => {
     try {
-      const [statsResponse] = await Promise.all([
-        agentService.getSystemStats(),
-      ]);
+      const promises: Promise<any>[] = [agentService.getSystemStats()];
+      
+      // Si no hay WebSocket (Netlify), cargar también agentes y alertas
+      if (isNetlify) {
+        promises.push(
+          agentService.getAllAgents(),
+          alertService.getRecentAlerts(50)
+        );
+      }
+      
+      const responses = await Promise.all(promises);
+      const [statsResponse, agentsResponse, alertsResponse] = responses;
 
       if (statsResponse.success) {
         setSystemStats(statsResponse.data);
       }
+      
+      if (isNetlify && agentsResponse && agentsResponse.success) {
+        setPolledAgents(agentsResponse.data);
+      }
+      
+      if (isNetlify && alertsResponse && alertsResponse.success) {
+        setPolledAlerts(alertsResponse.data);
+      }
+      
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Error loading dashboard data:', error);

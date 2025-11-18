@@ -7,8 +7,12 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // En producción, usar la URL actual
+  // En producción, detectar si estamos en Netlify
   if (process.env.NODE_ENV === 'production') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('netlify.app') || hostname.includes('netlify.com')) {
+      return window.location.origin + '/.netlify/functions/api';
+    }
     return window.location.origin + '/api';
   }
   
@@ -74,7 +78,7 @@ export const agentService = {
     api.get(`/agents/type/${type}`).then(res => res.data),
     
   getSystemStats: (): Promise<ApiResponse<SystemStats>> =>
-    api.get('/agents/stats/overview').then(res => res.data),
+    api.get('/dashboard').then(res => res.data),
     
   initializeAgents: (): Promise<ApiResponse<Agent[]>> =>
     api.post('/agents/initialize').then(res => res.data),

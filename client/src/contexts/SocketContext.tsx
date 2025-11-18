@@ -20,8 +20,12 @@ const getSocketUrl = () => {
     return process.env.REACT_APP_SOCKET_URL;
   }
   
-  // En producción, usar la URL actual
+  // En producción, verificar si estamos en Netlify
   if (process.env.NODE_ENV === 'production') {
+    const hostname = window.location.hostname;
+    if (hostname.includes('netlify.app') || hostname.includes('netlify.com')) {
+      return null; // Deshabilitar WebSockets en Netlify
+    }
     return window.location.origin;
   }
   
@@ -30,6 +34,7 @@ const getSocketUrl = () => {
 };
 
 const SOCKET_URL = getSocketUrl();
+const IS_NETLIFY = SOCKET_URL === null;
 
 export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -39,8 +44,15 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [systemStats, setSystemStats] = useState<any>(null);
 
   useEffect(() => {
-    // Crear conexión WebSocket
-    const socketInstance = io(SOCKET_URL, {
+    // Si estamos en Netlify, no crear WebSocket
+    if (IS_NETLIFY) {
+      console.log('🌐 Modo Netlify: WebSockets deshabilitados, usando polling HTTP');
+      setIsConnected(false);
+      return;
+    }
+
+    // Crear conexión WebSocket solo si no estamos en Netlify
+    const socketInstance = io(SOCKET_URL!, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       reconnectionDelay: 1000,
@@ -142,6 +154,11 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const emitAgentAction = useCallback((agentId: string, action: string) => {
+    if (IS_NETLIFY) {
+      console.log('🌐 Netlify: Acción de agente no enviada (WebSockets deshabilitados):', { agentId, action });
+      return;
+    }
+    
     if (socket && isConnected) {
       socket.emit('agent-action', { agentId, action });
       console.log('🤖 Acción de agente enviada:', { agentId, action });
@@ -149,6 +166,11 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [socket, isConnected]);
 
   const emitNewAlert = useCallback((alert: Partial<Alert>) => {
+    if (IS_NETLIFY) {
+      console.log('🌐 Netlify: Alerta no enviada (WebSockets deshabilitados):', alert);
+      return;
+    }
+    
     if (socket && isConnected) {
       socket.emit('new-alert', alert);
       console.log('🚨 Alerta enviada:', alert);
