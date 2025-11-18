@@ -22,12 +22,29 @@ const Agents: React.FC = () => {
 
   const loadAgents = async () => {
     try {
+      setLoading(true);
       const response = await agentService.getAllAgents();
-      if (response.success) {
-        setAgents(response.data);
+      console.log('🔍 Agents response:', response); // Debug
+      
+      // Manejar diferentes formatos de respuesta
+      let agentsData: Agent[] = [];
+      
+      if (response.success && response.data) {
+        agentsData = Array.isArray(response.data) ? response.data : [];
+      } else if (response.data && Array.isArray(response.data)) {
+        agentsData = response.data;
+      } else if (Array.isArray(response)) {
+        agentsData = response;
       }
+      
+      console.log('🤖 Loaded agents:', agentsData.length); // Debug
+      setAgents(agentsData);
     } catch (error) {
       console.error('Error loading agents:', error);
+      // En caso de error, usar datos por defecto si no hay agentes
+      if (agents.length === 0 && socketAgents.length === 0) {
+        setAgents([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -131,11 +148,23 @@ const Agents: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
-            <span className="font-medium text-green-600">
-              {agents.filter(a => a.status === 'active').length}
-            </span> activos
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4 text-sm">
+            <div className="text-gray-600">
+              <span className="font-medium text-green-600">
+                {agents.filter(a => a.status === 'active').length}
+              </span> activos
+            </div>
+            <div className="text-gray-600">
+              <span className="font-medium text-blue-600">
+                {agents.filter(a => ['investigating', 'responding', 'scanning'].includes(a.status)).length}
+              </span> trabajando
+            </div>
+            <div className="text-gray-600">
+              <span className="font-medium text-gray-500">
+                {agents.filter(a => ['inactive', 'maintenance'].includes(a.status)).length}
+              </span> offline
+            </div>
           </div>
           <button
             onClick={loadAgents}
@@ -147,20 +176,45 @@ const Agents: React.FC = () => {
         </div>
       </div>
 
-      {/* Agents Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {agents.map((agent) => (
-          <AgentCard 
-            key={agent._id} 
-            agent={agent} 
-            onAction={handleAgentAction}
-            isLoading={actionLoading === agent._id}
-          />
-        ))}
-      </div>
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-12">
+          <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando agentes...</p>
+        </div>
+      )}
 
-      {/* System Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* No Agents State */}
+      {!loading && agents.length === 0 && (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron agentes</h3>
+          <p className="text-gray-600 mb-4">No hay agentes disponibles en el sistema.</p>
+          <button
+            onClick={loadAgents}
+            className="btn-primary"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* Agents Grid */}
+      {!loading && agents.length > 0 && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {agents.map((agent) => (
+              <AgentCard 
+                key={agent._id} 
+                agent={agent} 
+                onAction={handleAgentAction}
+                isLoading={actionLoading === agent._id}
+              />
+            ))}
+          </div>
+
+          {/* System Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card">
           <div className="card-header">
             <h3 className="text-lg font-semibold text-gray-900">Rendimiento Promedio</h3>
@@ -214,6 +268,8 @@ const Agents: React.FC = () => {
           </div>
         </div>
       </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -46,10 +46,17 @@ class NetlifySimulationService {
       const lastActivity = new Date(now - (Math.abs(Math.sin(seed)) * 300000)); // Últimos 5 minutos
 
       // Estados dinámicos de agentes - preferir "active" al inicio
-      const statusOptions = ['active', 'investigating', 'responding', 'scanning', 'monitoring'];
+      const statusOptions = ['active', 'investigating', 'responding', 'scanning', 'monitoring', 'inactive', 'maintenance'];
       const statusIndex = Math.abs(Math.floor(Math.sin(seed * 1.1) * statusOptions.length));
-      // Hacer que al menos 5 de 7 agentes estén activos al inicio, luego rotar
-      const currentStatus = (index < 5 && secondsSeed < 12) ? 'active' : statusOptions[statusIndex];
+      // Hacer que al menos 5 de 7 agentes estén activos al inicio, luego rotar después de 1 minuto
+      let currentStatus;
+      if (index < 5 && secondsSeed < 12) {
+        currentStatus = 'active'; // Primeros 5 activos por 1 minuto
+      } else if (index < 6) {
+        currentStatus = statusOptions[statusIndex % 5]; // Solo estados activos para el 6to agente
+      } else {
+        currentStatus = statusOptions[statusIndex]; // El 7mo puede estar inactivo o en mantenimiento
+      }
       
       // Actividades dinámicas más específicas según estado
       const activitiesByStatus = {
@@ -87,6 +94,20 @@ class NetlifySimulationService {
           'Watching for anomalous behavior',
           'Tracking security KPIs',
           'Maintaining surveillance protocols'
+        ],
+        'inactive': [
+          'Agent offline for maintenance',
+          'Standby mode - ready for activation',
+          'Scheduled downtime',
+          'Awaiting configuration update',
+          'Resource conservation mode'
+        ],
+        'maintenance': [
+          'Performing system updates',
+          'Running diagnostic checks',
+          'Optimizing performance parameters',
+          'Updating threat signatures',
+          'Calibrating detection algorithms'
         ]
       };
       
@@ -113,7 +134,25 @@ class NetlifySimulationService {
         memory_usage: Math.round(Math.sin(seed / 80) * 30 + 40), // 10-70%
         response_time: Math.round(Math.sin(seed / 60) * 100 + 150), // 50-250ms
         alerts_processed: Math.floor(Math.sin(seed / 40) * 50 + 100), // 50-150
+        capabilities: agent.capabilities,
+        configuration: {
+          priority: Math.floor(Math.sin(seed / 90) * 3 + 1), // 1-4
+          autoResponse: Math.sin(seed * 1.9) > 0,
+          alertThreshold: Math.floor(Math.sin(seed / 80) * 5 + 5) // 5-10
+        },
+        networkLocation: {
+          region: this.locations[index % this.locations.length],
+          node: `node-${(index + 1).toString().padStart(3, '0')}`,
+          coordinates: {
+            lat: Math.sin(seed / 100) * 180 - 90, // -90 a 90
+            lng: Math.sin(seed / 110) * 360 - 180  // -180 a 180
+          }
+        },
+        createdAt: new Date(now - (index * 86400000 * 30)).toISOString(), // Creado hace X días
+        updatedAt: lastActivity.toISOString(),
         metrics: {
+          threatsDetected: threatsDetected,
+          actionsExecuted: actionsExecuted,
           uptime: Math.round(95 + Math.sin(seed / 90) * 5), // 95-100%
           responseTime: Math.round((Math.sin(seed / 60) * 0.5 + 0.3) * 100) / 100, // 0.1-0.8s
           accuracy: Math.round(90 + Math.sin(seed / 100) * 10) // 90-100%
