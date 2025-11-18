@@ -302,7 +302,26 @@ docker-compose logs -f
 
 ## 🚀 Despliegue
 
-### Heroku
+### 🌐 Netlify (Recomendado para Demos)
+
+✅ **Deploy más fácil** - Sin configuración de servidor
+✅ **Gratis** - Hasta 100GB de ancho de banda
+✅ **HTTPS automático** - SSL incluido
+✅ **Deploy desde Git** - Actualización automática
+
+```bash
+# Preparar para Netlify
+scripts/deploy-netlify.ps1  # Windows
+./scripts/deploy-netlify.sh  # Linux/Mac
+
+# Luego en Netlify.com:
+# 1. Conectar repositorio
+# 2. Deploy automático
+```
+
+📚 [Guía Completa de Netlify](NETLIFY-DEPLOY.md)
+
+### 🚀 Heroku
 
 ```bash
 # Configurar Heroku
@@ -317,7 +336,21 @@ heroku config:set JWT_SECRET=your-production-secret
 git push heroku main
 ```
 
-### AWS/Docker
+### 🚂 Railway
+
+```bash
+# Deploy directo
+npm run deploy:railway
+```
+
+### ▲ Vercel
+
+```bash
+# Deploy directo
+npm run deploy:vercel
+```
+
+### 🐳 Docker
 
 ```bash
 # Construir imagen
@@ -326,6 +359,18 @@ docker build -t blockchain-defense .
 # Ejecutar
 docker run -p 5000:5000 -e MONGODB_URI=your-uri blockchain-defense
 ```
+
+### 🗂️ Todas las Opciones
+
+| Plataforma | Comando | Tiempo Setup | Costo | WebSockets |
+|------------|---------|--------------|-------|------------|
+| **Netlify** | `scripts/deploy-netlify.ps1` | 2 min | Gratis | ❌ |
+| **Heroku** | `npm run deploy:heroku` | 5 min | $5/mes | ✅ |
+| **Railway** | `npm run deploy:railway` | 3 min | $5/mes | ✅ |
+| **Vercel** | `npm run deploy:vercel` | 2 min | Gratis | ❌ |
+| **Docker** | `npm run docker:up` | 1 min | Variable | ✅ |
+
+📋 [Guía Completa de Despliegue](DEPLOYMENT.md)
 
 ## 🤝 Contribución
 

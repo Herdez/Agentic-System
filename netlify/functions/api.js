@@ -2,8 +2,8 @@ const serverless = require('serverless-http');
 const express = require('express');
 const cors = require('cors');
 
-// Importar servicios
-const DemoSimulationService = require('../../server/services/DemoSimulationService');
+// Importar servicio stateless para Netlify
+const NetlifySimulationService = require('./NetlifySimulationService');
 
 const app = express();
 
@@ -17,15 +17,16 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Inicializar servicios
-const demoService = new DemoSimulationService();
+// Inicializar servicio stateless
+const demoService = new NetlifySimulationService();
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    environment: 'netlify',
+    environment: 'netlify-serverless',
+    mode: 'stateless-simulation',
     version: '1.0.0'
   });
 });
@@ -37,8 +38,8 @@ app.get('/api/agents', (req, res) => {
 });
 
 app.post('/api/agents/initialize', (req, res) => {
-  demoService.initializeAgents();
-  res.json({ message: 'Agentes inicializados', count: 7 });
+  const result = demoService.initializeAgents();
+  res.json(result);
 });
 
 // Rutas de alertas
@@ -49,28 +50,23 @@ app.get('/api/alerts', (req, res) => {
 
 // Rutas de simulación
 app.get('/api/simulation/status', (req, res) => {
-  const isRunning = demoService.isSimulationRunning();
-  res.json({
-    isRunning,
-    agentsCount: 7,
-    alertsCount: demoService.getAlerts().length,
-    uptime: demoService.getUptime()
-  });
+  const status = demoService.getSimulationStatus();
+  res.json(status);
 });
 
 app.post('/api/simulation/start', (req, res) => {
-  demoService.startSimulation();
-  res.json({ message: 'Simulación iniciada' });
+  const result = demoService.startSimulation();
+  res.json(result);
 });
 
 app.post('/api/simulation/stop', (req, res) => {
-  demoService.stopSimulation();
-  res.json({ message: 'Simulación detenida' });
+  const result = demoService.stopSimulation();
+  res.json(result);
 });
 
 app.post('/api/simulation/restart', (req, res) => {
-  demoService.restartSimulation();
-  res.json({ message: 'Simulación reiniciada' });
+  const result = demoService.restartSimulation();
+  res.json(result);
 });
 
 // Rutas de dashboard
@@ -88,12 +84,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Inicializar simulación
+// Inicializar simulación para Netlify
 try {
-  demoService.initializeAgents();
-  demoService.startSimulation();
+  console.log('Sistema inicializado en modo Netlify stateless');
 } catch (error) {
-  console.error('Error inicializando sistema demo:', error.message);
+  console.error('Error inicializando sistema Netlify:', error.message);
 }
 
 module.exports.handler = serverless(app);
