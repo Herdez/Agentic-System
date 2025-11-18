@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7-jammy
+    container_name: blockchain-defense-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: blockchain-defense
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - blockchain-network
+
+  server:
+    build: ./server
+    container_name: blockchain-defense-server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/blockchain-defense?authSource=admin
+      JWT_SECRET: blockchain-defense-docker-secret-key
+      NODE_ENV: development
+      CLIENT_URL: http://localhost:3000
+    depends_on:
+      - mongodb
+    networks:
+      - blockchain-network
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  client:
+    build: ./client
+    container_name: blockchain-defense-client
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+      REACT_APP_SOCKET_URL: http://localhost:5000
+    depends_on:
+      - server
+    networks:
+      - blockchain-network
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+  # Opcional: Redis para sesiones y cache
+  redis:
+    image: redis:7-alpine
+    container_name: blockchain-defense-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - blockchain-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  blockchain-network:
+    driver: bridge

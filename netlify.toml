@@ -1,0 +1,15 @@
+# Configuración para Netlify
+version: 1
+build:
+  publish: client/build
+  command: npm run build:netlify
+functions:
+  api:
+    directory: server
+redirects:
+  - from: /api/*
+    to: /.netlify/functions/api/:splat
+    status: 200
+  - from: /*
+    to: /index.html
+    status: 200

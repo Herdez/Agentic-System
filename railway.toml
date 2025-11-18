@@ -1,0 +1,16 @@
+# Railway configuración
+nixpacks.toml
+
+[phases.build]
+cmds = [
+    "npm install",
+    "cd server && npm install",
+    "cd client && npm install && npm run build"
+]
+
+[phases.start]
+cmd = "npm run start:production"
+
+[variables]
+NODE_ENV = "production"
+PORT = "5000"
