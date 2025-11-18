@@ -1,6 +1,6 @@
 [build]
   publish = "client/build"
-  command = "cd client && npm install && DISABLE_ESLINT_PLUGIN=true ESLINT_NO_DEV_ERRORS=true npm run build"
+  command = "chmod +x scripts/netlify-build.sh && ./scripts/netlify-build.sh"
   functions = "netlify/functions"
 
 [build.environment]
@@ -8,6 +8,7 @@
   NPM_FLAGS = "--production=false"
   ESLINT_NO_DEV_ERRORS = "true"
   DISABLE_ESLINT_PLUGIN = "true"
+  NODE_ENV = "production"
 
 [functions]
   node_bundler = "esbuild"
