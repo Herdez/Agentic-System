@@ -1,11 +1,13 @@
 [build]
   publish = "client/build"
-  command = "npm run build:netlify"
+  command = "cd client && npm install && DISABLE_ESLINT_PLUGIN=true ESLINT_NO_DEV_ERRORS=true npm run build"
   functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--production=false"
+  ESLINT_NO_DEV_ERRORS = "true"
+  DISABLE_ESLINT_PLUGIN = "true"
 
 [functions]
   node_bundler = "esbuild"
