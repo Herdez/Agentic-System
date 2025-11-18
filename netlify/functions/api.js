@@ -1,96 +1,110 @@
-const serverless = require('serverless-http');
-const express = require('express');
-const cors = require('cors');
-
-// Importar servicio stateless para Netlify
 const NetlifySimulationService = require('./NetlifySimulationService');
-
-const app = express();
-
-// Configurar CORS
-app.use(cors({
-  origin: '*',
-  credentials: true
-}));
-
-// Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
 
 // Inicializar servicio stateless
 const demoService = new NetlifySimulationService();
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    environment: 'netlify-serverless',
-    mode: 'stateless-simulation',
-    version: '1.0.0'
-  });
-});
+exports.handler = async (event, context) => {
+  try {
+    const { httpMethod: method, path, queryStringParameters: query, body } = event;
+    
+    // Headers CORS
+    const headers = {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE'
+    };
 
-// Rutas de agentes
-app.get('/agents', (req, res) => {
-  const agents = demoService.getAgents();
-  res.json(agents);
-});
+    // Manejar OPTIONS para CORS
+    if (method === 'OPTIONS') {
+      return { statusCode: 200, headers, body: '' };
+    }
 
-app.post('/agents/initialize', (req, res) => {
-  const result = demoService.initializeAgents();
-  res.json(result);
-});
+    let response = {};
 
-// Rutas de alertas
-app.get('/alerts', (req, res) => {
-  const alerts = demoService.getAlerts();
-  const limit = req.query.limit ? parseInt(req.query.limit) : alerts.length;
-  const limitedAlerts = alerts.slice(0, limit);
-  res.json(limitedAlerts);
-});
+    // Rutas GET
+    if (method === 'GET') {
+      if (path === '/health' || path.endsWith('/health')) {
+        response = {
+          status: 'OK',
+          timestamp: new Date().toISOString(),
+          environment: 'netlify-serverless',
+          mode: 'stateless-simulation',
+          version: '1.0.0'
+        };
+      }
+      else if (path === '/agents' || path.endsWith('/agents')) {
+        response = demoService.getAgents();
+      }
+      else if (path === '/alerts' || path.endsWith('/alerts')) {
+        const alerts = demoService.getAlerts();
+        const limit = query?.limit ? parseInt(query.limit) : alerts.length;
+        response = alerts.slice(0, limit);
+      }
+      else if (path === '/dashboard' || path.endsWith('/dashboard')) {
+        response = demoService.getSystemStats();
+      }
+      else if (path === '/simulation/status' || path.endsWith('/simulation/status')) {
+        response = demoService.getSimulationStatus();
+      }
+      else {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Ruta no encontrada', path: path })
+        };
+      }
+    }
+    // Rutas POST
+    else if (method === 'POST') {
+      if (path === '/agents/initialize' || path.endsWith('/agents/initialize')) {
+        response = demoService.initializeAgents();
+      }
+      else if (path === '/simulation/start' || path.endsWith('/simulation/start')) {
+        response = demoService.startSimulation();
+      }
+      else if (path === '/simulation/stop' || path.endsWith('/simulation/stop')) {
+        response = demoService.stopSimulation();
+      }
+      else if (path === '/simulation/restart' || path.endsWith('/simulation/restart')) {
+        response = demoService.restartSimulation();
+      }
+      else {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Ruta POST no encontrada', path: path })
+        };
+      }
+    }
+    else {
+      return {
+        statusCode: 405,
+        headers,
+        body: JSON.stringify({ error: 'Método no permitido', method })
+      };
+    }
 
-// Rutas de simulación
-app.get('/simulation/status', (req, res) => {
-  const status = demoService.getSimulationStatus();
-  res.json(status);
-});
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(response)
+    };
 
-app.post('/simulation/start', (req, res) => {
-  const result = demoService.startSimulation();
-  res.json(result);
-});
-
-app.post('/simulation/stop', (req, res) => {
-  const result = demoService.stopSimulation();
-  res.json(result);
-});
-
-app.post('/simulation/restart', (req, res) => {
-  const result = demoService.restartSimulation();
-  res.json(result);
-});
-
-// Rutas de dashboard
-app.get('/dashboard', (req, res) => {
-  const stats = demoService.getSystemStats();
-  res.json(stats);
-});
-
-// Manejo de errores
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    error: 'Error interno del servidor',
-    message: 'Algo salió mal'
-  });
-});
-
-// Inicializar simulación para Netlify
-try {
-  console.log('Sistema inicializado en modo Netlify stateless');
-} catch (error) {
-  console.error('Error inicializando sistema Netlify:', error.message);
-}
-
-module.exports.handler = serverless(app);
+  } catch (error) {
+    console.error('Error en función Netlify:', error);
+    
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({
+        error: 'Error interno del servidor',
+        message: error.message,
+        timestamp: new Date().toISOString()
+      })
+    };
+  }
+};
