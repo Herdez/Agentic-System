@@ -1,0 +1,150 @@
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
+import { Shield, Menu, X, Bell, User, LogOut } from 'lucide-react';
+
+const Navbar: React.FC = () => {
+  const { state: authState, logout } = useAuth();
+  const { isConnected, alerts } = useSocket();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  const criticalAlerts = alerts.filter(alert => alert.severity === 'critical').length;
+
+  const navigationItems = [
+    { name: 'Dashboard', path: '/', icon: '📊' },
+    { name: 'Agentes', path: '/agents', icon: '🤖' },
+    { name: 'Alertas', path: '/alerts', icon: '🚨' },
+    { name: 'Amenazas', path: '/threats', icon: '🔍' },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const isActivePage = (path: string) => {
+    return location.pathname === path;
+  };
+
+  return (
+    <nav className="bg-white shadow-lg border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo y título */}
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center space-x-2">
+              <Shield className="h-8 w-8 text-primary-600" />
+              <span className="text-xl font-bold text-gray-900 hidden sm:block">
+                Blockchain Defense
+              </span>
+            </Link>
+          </div>
+
+          {/* Navegación desktop */}
+          <div className="hidden md:flex items-center space-x-8">
+            {navigationItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  isActivePage(item.path)
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <span className="mr-2">{item.icon}</span>
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Estado y usuario */}
+          <div className="flex items-center space-x-4">
+            {/* Estado de conexión */}
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-xs text-gray-600 hidden sm:block">
+                {isConnected ? 'Conectado' : 'Desconectado'}
+              </span>
+            </div>
+
+            {/* Notificaciones */}
+            <div className="relative">
+              <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                <Bell className="h-5 w-5" />
+                {criticalAlerts > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {criticalAlerts}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Usuario */}
+            <div className="relative group">
+              <button className="flex items-center space-x-2 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                <User className="h-5 w-5" />
+                <span className="hidden sm:block text-sm font-medium">
+                  {authState.user?.username || 'Usuario'}
+                </span>
+              </button>
+              
+              {/* Dropdown menu */}
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-1">
+                  <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                    <p className="font-medium">{authState.user?.username}</p>
+                    <p className="text-xs text-gray-500">{authState.user?.email}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Menú móvil toggle */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Navegación móvil */}
+        {isMenuOpen && (
+          <div className="md:hidden py-3 border-t border-gray-200 animate-fade-in">
+            <div className="space-y-1">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
+                    isActivePage(item.path)
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="mr-2">{item.icon}</span>
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
