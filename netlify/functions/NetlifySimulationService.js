@@ -1,3 +1,7 @@
+// Variable global para mantener el estado de la simulación en memoria
+let simulationRunning = true;
+let pausedSince = null;
+
 // Simulación stateless para Netlify Functions
 class NetlifySimulationService {
   constructor() {
@@ -25,6 +29,11 @@ class NetlifySimulationService {
 
   // Generar agentes con datos dinámicos basados en timestamp
   getAgents() {
+    // Si la simulación está pausada, retornar agentes en estado pausado
+    if (!simulationRunning) {
+      return this.getPausedAgents();
+    }
+
     const now = Date.now();
     const secondsSeed = Math.floor(now / 5000); // Cambia cada 5 segundos
     
@@ -161,8 +170,67 @@ class NetlifySimulationService {
     });
   }
 
+  // Generar agentes en estado pausado
+  getPausedAgents() {
+    const now = Date.now();
+    
+    return this.agentTypes.map((agent, index) => {
+      const lastActivity = pausedSince ? new Date(pausedSince) : new Date(now - 300000);
+      
+      return {
+        id: agent.id,
+        _id: agent.id,
+        name: agent.name,
+        type: agent.id,
+        status: 'inactive', // Todos inactivos cuando está pausado
+        activity_level: 0,
+        threats_detected: 0,
+        actions_executed: 0,
+        last_activity: lastActivity.toISOString(),
+        lastActivity: lastActivity.toISOString(),
+        current_activity: 'Simulación pausada - agente en standby',
+        description: agent.description,
+        location: this.locations[index % this.locations.length],
+        version: '2.1.0',
+        uptime: 0,
+        cpu_usage: 5, // Uso mínimo
+        memory_usage: 10,
+        response_time: 0,
+        alerts_processed: 0,
+        capabilities: agent.capabilities,
+        configuration: {
+          priority: 1,
+          autoResponse: false,
+          alertThreshold: 10
+        },
+        networkLocation: {
+          region: this.locations[index % this.locations.length],
+          node: `node-${(index + 1).toString().padStart(3, '0')}`,
+          coordinates: {
+            lat: 0,
+            lng: 0
+          }
+        },
+        createdAt: new Date(now - (index * 86400000 * 30)).toISOString(),
+        updatedAt: lastActivity.toISOString(),
+        metrics: {
+          threatsDetected: 0,
+          actionsExecuted: 0,
+          uptime: 0,
+          responseTime: 0,
+          accuracy: 0
+        }
+      };
+    });
+  }
+
   // Generar alertas dinámicas
   getAlerts() {
+    // Si la simulación está pausada, retornar alertas estáticas
+    if (!simulationRunning) {
+      return this.getPausedAlerts();
+    }
+
     const now = Date.now();
     const alerts = [];
     const secondsSeed = Math.floor(now / 5000); // Cambiar cada 5 segundos
@@ -239,19 +307,47 @@ class NetlifySimulationService {
     return alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
 
+  // Generar alertas para simulación pausada
+  getPausedAlerts() {
+    const pauseTime = pausedSince ? new Date(pausedSince) : new Date();
+    
+    return [
+      {
+        id: 'paused-alert-1',
+        title: 'Sistema Pausado',
+        name: 'Simulación en Estado de Pausa',
+        description: 'La simulación del sistema de defensa blockchain ha sido pausada manualmente',
+        severity: 'low',
+        status: 'active',
+        source: 'Sistema',
+        timestamp: pauseTime.toISOString(),
+        agent_id: 'coordinator',
+        threat_type: 'System Status',
+        threat_icon: '⏸️',
+        confidence: 100,
+        risk_score: 0,
+        affected_systems: ['Todos los agentes'],
+        mitigation_status: 'paused',
+        source_ip: 'localhost',
+        attempts_blocked: 0,
+        detection_time: pauseTime.toISOString()
+      }
+    ];
+  }
+
   // Simular estado de simulación
   getSimulationStatus() {
     const now = Date.now();
-    const minutesSeed = Math.floor(now / 60000);
     
     return {
-      isRunning: true, // Siempre "corriendo" en modo demo
+      isRunning: simulationRunning,
       agentsCount: 7,
       alertsCount: this.getAlerts().length,
       uptime: Math.floor((now % (24 * 3600000)) / 1000), // Segundos del día
       startTime: new Date(now - (now % (24 * 3600000))).toISOString(), // Inicio del día
       lastUpdate: new Date().toISOString(),
-      mode: 'netlify-stateless'
+      mode: 'netlify-stateless',
+      pausedSince: pausedSince
     };
   }
 
@@ -338,23 +434,43 @@ class NetlifySimulationService {
 
   // Métodos para compatibilidad con la API existente
   initializeAgents() {
+    simulationRunning = true;
+    pausedSince = null;
     return { message: 'Agentes inicializados en modo Netlify', count: 7 };
   }
 
   startSimulation() {
-    return { message: 'Simulación activa en modo stateless', timestamp: new Date().toISOString() };
+    simulationRunning = true;
+    pausedSince = null;
+    return { 
+      message: 'Simulación iniciada en modo stateless', 
+      timestamp: new Date().toISOString(),
+      isRunning: true
+    };
   }
 
   stopSimulation() {
-    return { message: 'Simulación en modo stateless - no se puede detener', timestamp: new Date().toISOString() };
+    simulationRunning = false;
+    pausedSince = new Date().toISOString();
+    return { 
+      message: 'Simulación pausada en modo stateless', 
+      timestamp: new Date().toISOString(),
+      isRunning: false
+    };
   }
 
   restartSimulation() {
-    return { message: 'Simulación reiniciada en modo stateless', timestamp: new Date().toISOString() };
+    simulationRunning = true;
+    pausedSince = null;
+    return { 
+      message: 'Simulación reiniciada en modo stateless', 
+      timestamp: new Date().toISOString(),
+      isRunning: true
+    };
   }
 
   isSimulationRunning() {
-    return true; // Siempre "corriendo" en modo demo
+    return simulationRunning;
   }
 
   getUptime() {

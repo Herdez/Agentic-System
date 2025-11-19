@@ -90,6 +90,12 @@ exports.handler = async (event, context) => {
           data: demoService.stopSimulation()
         };
       }
+      else if (path === '/simulation/pause' || path.endsWith('/simulation/pause')) {
+        response = {
+          success: true,
+          data: demoService.stopSimulation() // pause usa stop internamente
+        };
+      }
       else if (path === '/simulation/restart' || path.endsWith('/simulation/restart')) {
         response = {
           success: true,

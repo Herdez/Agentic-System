@@ -1,5 +1,137 @@
 # 🛡️ Sistema de Defensa Blockchain con Agentes AI
 
+## 🎯 **OBJETIVO**
+Desarrollar un sistema descentralizado de ciberseguridad para redes blockchain que utiliza 7 agentes AI autónomos especializados para proteger la infraestructura crítica en tiempo real. El sistema proporciona monitoreo continuo, detección proactiva de amenazas y respuesta automática ante incidentes de seguridad.
+
+## 🔍 **CASO A RESOLVER**
+
+### Problemática Principal:
+Las redes blockchain enfrentan amenazas de ciberseguridad cada vez más sofisticadas que requieren respuesta inmediata y especializada. Los métodos tradicionales de seguridad son insuficientes para abordar:
+
+1. **Ataques DDoS masivos** que pueden comprometer la disponibilidad de la red
+2. **Intrusiones sofisticadas** que explotan vulnerabilidades del sistema
+3. **Amenazas de día cero** que requieren detección basada en patrones de comportamiento
+4. **Ataques coordinados** que necesitan respuesta multi-agente sincronizada
+5. **Cumplimiento normativo** en entornos descentralizados complejos
+6. **Recuperación ante desastres** en sistemas distribuidos críticos
+
+### Solución Propuesta:
+Sistema inteligente que combina IA, análisis de patrones y coordinación autónoma para crear una defensa adaptativa y proactiva.
+
+## ✅ **ATRIBUTOS A CUMPLIR CON LA APLICACIÓN**
+
+### 🚀 **Funcionales**
+1. **Monitoreo en Tiempo Real**
+   - Dashboard interactivo con métricas en vivo
+   - Visualización geográfica de amenazas
+   - Actualizaciones cada 5 segundos vía WebSocket/HTTP polling
+
+2. **Sistema de Agentes AI Especializado**
+   - 7 agentes autónomos con roles específicos
+   - Coordinación automática entre agentes
+   - Estados dinámicos: activo, investigando, respondiendo, escaneando, monitoreo, inactivo, mantenimiento
+
+3. **Gestión Inteligente de Alertas**
+   - Clasificación automática por severidad (crítica, alta, media, baja)
+   - Notificaciones específicas con iconos distintivos
+   - Seguimiento de resolución y métricas de respuesta
+
+4. **Métricas de Seguridad Avanzadas**
+   - Tasa de detección de amenazas: 70-100%
+   - Falsos positivos: 0-5%
+   - Eficiencia de respuesta: 84-100%
+   - Tiempo de resolución: 20-70 minutos
+   - Resiliencia del sistema: 92-100%
+
+5. **Autenticación y Autorización**
+   - Sistema JWT con roles (Admin, Analyst, Operator)
+   - Credenciales por defecto para demo
+   - Gestión de sesiones seguras
+
+### 🔧 **No Funcionales**
+1. **Rendimiento**
+   - Tiempo de respuesta: 50-150ms
+   - Throughput: 1000-2000 req/s
+   - Disponibilidad: 99.81-99.99%
+   - Escalabilidad horizontal
+
+2. **Usabilidad**
+   - Interfaz responsive para todos los dispositivos
+   - Diseño intuitivo con TailwindCSS
+   - Inicio con un solo comando (`npm start`)
+   - Modo demo sin dependencias externas
+
+3. **Compatibilidad**
+   - Multiplataforma: Windows, macOS, Linux
+   - Navegadores modernos
+   - Node.js 18+, MongoDB 4.4+
+
+4. **Mantenibilidad**
+   - Arquitectura modular (MVC)
+   - Código TypeScript tipado
+   - Documentación completa
+   - Testing automatizado
+
+## ⚠️ **RESTRICCIONES**
+
+### 🔒 **Técnicas**
+1. **Dependencias del Sistema**
+   - Node.js 18 o superior obligatorio
+   - MongoDB opcional (modo demo disponible)
+   - Puerto 3000/3001 para frontend
+   - Puerto 5000 para backend API
+
+2. **Recursos Computacionales**
+   - RAM mínima: 2GB
+   - Espacio en disco: 500MB
+   - CPU: Procesador dual-core mínimo
+   - Conexión a internet para APIs externas
+
+3. **Compatibilidad de Navegadores**
+   - Chrome 90+, Firefox 88+, Safari 14+
+   - JavaScript habilitado obligatorio
+   - WebSocket support requerido para tiempo real
+
+### 🌐 **De Despliegue**
+1. **Limitaciones de Plataforma**
+   - Netlify: Sin WebSockets (usa HTTP polling)
+   - Heroku: Sleep mode en plan gratuito
+   - Vercel: Límites de función serverless
+   - Railway: Límites de CPU/memoria
+
+2. **Configuración de Red**
+   - CORS configurado para desarrollo local
+   - Puertos automáticamente detectados
+   - Variables de entorno requeridas para producción
+
+### 📋 **Operacionales**
+1. **Modo Demo**
+   - Funciona sin MongoDB real
+   - Datos simulados con algoritmos determinísticos
+   - No persiste información entre sesiones
+
+2. **Seguridad**
+   - JWT_SECRET debe configurarse para producción
+   - HTTPS requerido para entornos productivos
+   - Rate limiting configurado (100 req/15min)
+
+3. **Escalabilidad**
+   - Máximo 7 agentes por instancia
+   - Base de datos compartida en cluster
+   - Load balancing manual requerido
+
+### 🔧 **De Desarrollo**
+1. **Stack Tecnológico Fijo**
+   - Frontend: React 18 + TypeScript
+   - Backend: Node.js + Express
+   - Base de datos: MongoDB
+   - No compatible con otras bases de datos
+
+2. **APIs Externas**
+   - VirusTotal API (opcional)
+   - Shodan API (opcional)
+   - Limitaciones de rate limiting de terceros
+
 Sistema descentralizado de defensa para redes blockchain con 7 agentes AI autónomos que trabajan colaborativamente para proteger la infraestructura.
 
 ## 🚀 INICIO RÁPIDO - UNA SOLA INSTRUCCIÓN
