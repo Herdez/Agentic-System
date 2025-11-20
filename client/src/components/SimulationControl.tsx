@@ -20,34 +20,86 @@ const SimulationControl = () => {
 
   // Función para obtener datos cuando WebSocket no está disponible
   const fetchFallbackData = useCallback(async () => {
-    if (!isConnected && (!agents?.length || !alerts?.length)) {
-      try {
-        console.log('🔄 Obteniendo datos fallback para Netlify...');
+    try {
+      console.log('🔄 fetchFallbackData iniciado...');
+      
+      // En Netlify, usar las Netlify Functions directamente
+      const isNetlify = window.location.hostname.includes('netlify');
+      
+      let agentsArray = [];
+      let alertsArray = [];
+      
+      if (isNetlify) {
+        // Para Netlify, usar las Netlify Functions
+        console.log('🌐 Detectado entorno Netlify, usando Netlify Functions...');
         
-        // Obtener agentes
+        const agentsResponse = await fetch('/.netlify/functions/api?endpoint=agents');
+        const agentsText = await agentsResponse.text();
+        console.log('📡 Respuesta raw de agentes:', agentsText.substring(0, 200));
+        
+        try {
+          const agentsData = JSON.parse(agentsText);
+          agentsArray = agentsData?.success ? agentsData.data : (Array.isArray(agentsData) ? agentsData : []);
+        } catch (e) {
+          console.error('❌ Error parseando agentes:', e);
+        }
+        
+        const alertsResponse = await fetch('/.netlify/functions/api?endpoint=alerts');
+        const alertsText = await alertsResponse.text();
+        console.log('📡 Respuesta raw de alertas:', alertsText.substring(0, 200));
+        
+        try {
+          const alertsData = JSON.parse(alertsText);
+          alertsArray = alertsData?.success ? alertsData.data : (Array.isArray(alertsData) ? alertsData : []);
+        } catch (e) {
+          console.error('❌ Error parseando alertas:', e);
+        }
+      } else {
+        // Para desarrollo local
+        console.log('🏠 Detectado entorno local, usando API local...');
+        
         const agentsResponse = await fetch('/api/agents');
         const agentsData = await agentsResponse.json();
-        const agentsArray = agentsData?.success ? agentsData.data : [];
-        setFallbackAgents(agentsArray);
+        agentsArray = agentsData?.success ? agentsData.data : (Array.isArray(agentsData) ? agentsData : []);
         
-        // Obtener alertas
         const alertsResponse = await fetch('/api/alerts');
         const alertsData = await alertsResponse.json();
-        const alertsArray = alertsData?.success ? alertsData.data : [];
-        setFallbackAlerts(alertsArray);
-        
-        console.log('✅ Datos fallback obtenidos:', { agentes: agentsArray.length, alertas: alertsArray.length });
-      } catch (error) {
-        console.error('❌ Error obteniendo datos fallback:', error);
+        alertsArray = alertsData?.success ? alertsData.data : (Array.isArray(alertsData) ? alertsData : []);
       }
+      
+      setFallbackAgents(agentsArray);
+      setFallbackAlerts(alertsArray);
+      
+      console.log('✅ Datos fallback obtenidos:', { 
+        agentes: agentsArray.length, 
+        alertas: alertsArray.length,
+        fuente: isNetlify ? 'Netlify Functions' : 'API Local'
+      });
+      
+    } catch (error) {
+      console.error('❌ Error obteniendo datos fallback:', error);
+      setFallbackAgents([]);
+      setFallbackAlerts([]);
     }
-  }, [isConnected, agents, alerts]);
+  }, []);
 
   // Calcular estadísticas en tiempo real desde los datos del socket
   const calculateRealTimeStats = useCallback(() => {
     // Usar datos del socket si están disponibles, sino usar fallback
     const dataAgents = (agents && agents.length > 0) ? agents : fallbackAgents;
     const dataAlerts = (alerts && alerts.length > 0) ? alerts : fallbackAlerts;
+    
+    console.log('🔧 calculateRealTimeStats - Estado de datos:', {
+      socketAgents: agents?.length || 0,
+      socketAlerts: alerts?.length || 0,
+      fallbackAgents: fallbackAgents.length,
+      fallbackAlerts: fallbackAlerts.length,
+      usingData: {
+        agents: dataAgents?.length || 0,
+        alerts: dataAlerts?.length || 0
+      },
+      isConnected
+    });
     
     if (dataAgents && dataAlerts && dataAgents.length > 0) {
       // Filtrar agentes activos (todos excepto inactivos)
@@ -132,15 +184,26 @@ const SimulationControl = () => {
 
   // Efecto para cargar datos fallback cuando no hay WebSocket
   useEffect(() => {
-    if (!isConnected) {
-      console.log('🔄 WebSocket desconectado, cargando datos fallback...');
+    // Detectar inmediatamente si no tenemos WebSocket o si estamos en Netlify
+    const isNetlifyEnv = window.location.hostname.includes('netlify');
+    const needsFallback = !isConnected || isNetlifyEnv || (!agents?.length && !alerts?.length);
+    
+    if (needsFallback) {
+      console.log('🔄 Detectado entorno sin WebSocket, cargando datos fallback...', {
+        isConnected,
+        isNetlifyEnv,
+        hasAgents: !!agents?.length,
+        hasAlerts: !!alerts?.length
+      });
+      
+      // Cargar inmediatamente
       fetchFallbackData();
       
-      // Polling cada 15 segundos para mantener datos actualizados en Netlify
+      // Polling cada 15 segundos para mantener datos actualizados
       const interval = setInterval(fetchFallbackData, 15000);
       return () => clearInterval(interval);
     }
-  }, [isConnected, fetchFallbackData]);
+  }, [isConnected, fetchFallbackData, agents, alerts]);
 
   useEffect(() => {
     console.log('🔧 SimulationControl: Inicializando componente con simulación siempre activa');
