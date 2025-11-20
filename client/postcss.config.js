@@ -1,2 +1,2 @@
-// PostCSS configuration - TailwindCSS completely removed for deployment compatibility
+// PostCSS configuration - TailwindCSS disabled temporarily for testing
 module.exports = {}

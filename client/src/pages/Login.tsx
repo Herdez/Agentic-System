@@ -27,7 +27,7 @@ const Login: React.FC = () => {
     try {
       await login(username, password);
       showSuccess('Éxito', 'Inicio de sesión exitoso');
-      navigate('/');
+      navigate('/dashboard');
     } catch (error: any) {
       showError('Error de autenticación', error.message || 'Credenciales inválidas');
     } finally {

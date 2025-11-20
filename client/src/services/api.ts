@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApiResponse, Agent, Alert, Threat, SystemStats, NetworkTopology, User } from '../types';
+import { ApiResponse, Agent, Alert, Threat, SystemStats, NetworkTopology, User, Permission } from '../types';
 
 // Configuración dinámica de URL para producción
 const getApiUrl = () => {
@@ -161,14 +161,118 @@ export const threatService = {
 
 // Servicios de Autenticación
 export const authService = {
-  login: (credentials: { username: string; password: string }): Promise<ApiResponse<{ token: string; user: User }>> =>
-    api.post('/auth/login', credentials).then(res => res.data),
+  login: (credentials: { username: string; password: string }): Promise<ApiResponse<{ token: string; user: User }>> => {
+    return new Promise((resolve, reject) => {
+      // Credenciales hardcodeadas para login local
+      const validCredentials = [
+        { 
+          username: 'admin', 
+          password: 'admin123', 
+          user: { 
+            id: 1, 
+            username: 'admin', 
+            email: 'admin@security.com', 
+            role: 'admin' as const, 
+            permissions: ['read', 'write', 'manage_agents', 'manage_users', 'manage_alerts'] as Permission[]
+          } 
+        },
+        { 
+          username: 'analyst', 
+          password: 'analyst123', 
+          user: { 
+            id: 2, 
+            username: 'analyst', 
+            email: 'analyst@security.com', 
+            role: 'analyst' as const, 
+            permissions: ['read', 'write', 'manage_alerts'] as Permission[]
+          } 
+        },
+        { 
+          username: 'operator', 
+          password: 'operator123', 
+          user: { 
+            id: 3, 
+            username: 'operator', 
+            email: 'operator@security.com', 
+            role: 'operator' as const, 
+            permissions: ['read'] as Permission[]
+          } 
+        }
+      ];
+
+      // Simular delay de red
+      setTimeout(() => {
+        const validUser = validCredentials.find(
+          cred => cred.username === credentials.username && cred.password === credentials.password
+        );
+
+        if (validUser) {
+          const token = `demo-token-${validUser.user.id}-${Date.now()}`;
+          resolve({
+            success: true,
+            data: {
+              token,
+              user: validUser.user
+            },
+            message: 'Login exitoso'
+          });
+        } else {
+          reject({
+            success: false,
+            message: 'Credenciales inválidas'
+          });
+        }
+      }, 500); // Simular 500ms de delay
+    });
+  },
     
-  logout: (): Promise<ApiResponse<any>> =>
-    api.post('/auth/logout').then(res => res.data),
+  logout: (): Promise<ApiResponse<any>> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: true,
+          data: null,
+          message: 'Logout exitoso'
+        });
+      }, 200);
+    });
+  },
     
-  getProfile: (): Promise<ApiResponse<User>> =>
-    api.get('/auth/profile').then(res => res.data),
+  getProfile: (): Promise<ApiResponse<User>> => {
+    return new Promise((resolve, reject) => {
+      const token = localStorage.getItem('token');
+      
+      if (token && token.startsWith('demo-token-')) {
+        // Extraer ID del usuario del token
+        const userId = parseInt(token.split('-')[2]);
+        const users = [
+          { id: 1, username: 'admin', email: 'admin@security.com', role: 'admin' as const, permissions: ['read', 'write', 'manage_agents', 'manage_users', 'manage_alerts'] as Permission[] },
+          { id: 2, username: 'analyst', email: 'analyst@security.com', role: 'analyst' as const, permissions: ['read', 'write', 'manage_alerts'] as Permission[] },
+          { id: 3, username: 'operator', email: 'operator@security.com', role: 'operator' as const, permissions: ['read'] as Permission[] }
+        ];
+        
+        const user = users.find(u => u.id === userId);
+        
+        if (user) {
+          resolve({
+            success: true,
+            data: user,
+            message: 'Perfil obtenido'
+          });
+        } else {
+          reject({
+            success: false,
+            message: 'Token inválido'
+          });
+        }
+      } else {
+        reject({
+          success: false,
+          message: 'No autenticado'
+        });
+      }
+    });
+  },
     
   updateProfile: (profileData: { email?: string }): Promise<ApiResponse<User>> =>
     api.put('/auth/profile', profileData).then(res => res.data),

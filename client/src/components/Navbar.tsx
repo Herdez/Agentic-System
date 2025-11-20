@@ -89,7 +89,7 @@ const Navbar: React.FC = () => {
   }, [isUserMenuOpen, isNotificationOpen]);
 
   const navigationItems = [
-    { name: 'Dashboard', path: '/', icon: '📊' },
+    { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Agentes', path: '/agents', icon: '🤖' },
     { name: 'Alertas', path: '/alerts', icon: '🚨' },
     { name: 'Amenazas', path: '/threats', icon: '🔍' },
