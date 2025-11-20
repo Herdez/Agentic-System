@@ -135,6 +135,8 @@ const SimulationControl = () => {
         fuenteDatos: dataAgents === agents ? 'WebSocket' : 'Fallback API'
       });
 
+      // ¡IMPORTANTE! Actualizar el estado con las nuevas estadísticas
+      setStats(stats);
       return stats;
     }
     return null;
@@ -293,6 +295,14 @@ const SimulationControl = () => {
       setIsRunning(true);
     }
   }, []);
+
+  // Efecto para recalcular estadísticas cuando cambien los datos fallback
+  useEffect(() => {
+    if (fallbackAgents.length > 0 || fallbackAlerts.length > 0) {
+      console.log('📊 Datos fallback actualizados, recalculando estadísticas...');
+      calculateRealTimeStats();
+    }
+  }, [fallbackAgents, fallbackAlerts, calculateRealTimeStats]);
 
   return (
     <div className="simulation-control-card">
