@@ -1,18 +1,35 @@
-// Variables globales para estado de simulación
-// En Netlify Functions, usar localStorage-like approach con timestamps
+// Variables globales para estado de simulación con persistencia mejorada
 let simulationRunning = false;
 let pausedSince = Date.now();
 let simulationStartTime = null;
 let lastStateChange = Date.now();
 
-// Función para determinar estado basado en tiempo (para persistencia en serverless)
+// Cache de estado para evitar cambios erráticos
+let stateCache = {
+  lastUpdate: 0,
+  cachedState: false,
+  cacheDuration: 30000 // 30 segundos de cache
+};
+
+// Función para determinar estado con cache para mayor estabilidad
 function determineSimulationState() {
   const now = Date.now();
-  // Si no hay cambio de estado reciente y han pasado más de 5 minutos, asumir pausado
-  if (now - lastStateChange > 300000 && !simulationStartTime) {
+  
+  // Si el cache es válido, usar el estado cacheado
+  if (now - stateCache.lastUpdate < stateCache.cacheDuration) {
+    return stateCache.cachedState;
+  }
+  
+  // Si han pasado más de 2 minutos sin actualización y no hay start time, asumir pausado
+  if (now - lastStateChange > 120000 && !simulationStartTime) {
     simulationRunning = false;
     pausedSince = now;
   }
+  
+  // Actualizar cache
+  stateCache.lastUpdate = now;
+  stateCache.cachedState = simulationRunning;
+  
   return simulationRunning;
 }
 
@@ -355,21 +372,32 @@ class NetlifySimulationService {
     ];
   }
 
-  // Simular estado de simulación
+  // Simular estado de simulación con mayor estabilidad
   getSimulationStatus() {
     const now = Date.now();
     const currentlyRunning = determineSimulationState();
     
+    console.log('📊 getSimulationStatus llamado:', {
+      currentlyRunning,
+      simulationStartTime,
+      lastStateChange: new Date(lastStateChange).toISOString(),
+      cacheValid: (now - stateCache.lastUpdate < stateCache.cacheDuration)
+    });
+    
     return {
       isRunning: currentlyRunning,
       agentsCount: 7,
-      alertsCount: this.getAlerts().length,
-      uptime: simulationStartTime ? Math.floor((now - simulationStartTime) / 1000) : 0,
+      alertsCount: currentlyRunning ? this.getAlerts().length : 3,
+      uptime: simulationStartTime && currentlyRunning ? Math.floor((now - simulationStartTime) / 1000) : 0,
       startTime: simulationStartTime ? new Date(simulationStartTime).toISOString() : null,
       lastUpdate: new Date().toISOString(),
-      mode: 'netlify-stateless',
-      pausedSince: pausedSince ? new Date(pausedSince).toISOString() : null,
-      stateChangeTime: new Date(lastStateChange).toISOString()
+      mode: 'netlify-stateless-stable',
+      pausedSince: pausedSince && !currentlyRunning ? new Date(pausedSince).toISOString() : null,
+      stateChangeTime: new Date(lastStateChange).toISOString(),
+      cacheStatus: {
+        valid: (now - stateCache.lastUpdate < stateCache.cacheDuration),
+        age: now - stateCache.lastUpdate
+      }
     };
   }
 
@@ -477,16 +505,22 @@ class NetlifySimulationService {
     simulationStartTime = Date.now();
     lastStateChange = Date.now();
     
-    console.log('🚀 Simulación iniciada en Netlify:', { 
-      timestamp: new Date().toISOString(),
-      isRunning: true 
-    });
+    // Forzar actualización del cache
+    stateCache.lastUpdate = 0;
+    stateCache.cachedState = true;
     
-    return { 
-      message: 'Simulación iniciada en modo stateless', 
+    console.log('🚀 Simulación EXPLÍCITAMENTE iniciada:', { 
       timestamp: new Date().toISOString(),
       isRunning: true,
       simulationStartTime: simulationStartTime
+    });
+    
+    return { 
+      message: 'Simulación iniciada - Estado fijado a RUNNING', 
+      timestamp: new Date().toISOString(),
+      isRunning: true,
+      simulationStartTime: simulationStartTime,
+      action: 'FORCE_START'
     };
   }
 
@@ -496,16 +530,22 @@ class NetlifySimulationService {
     simulationStartTime = null;
     lastStateChange = Date.now();
     
-    console.log('⏸️ Simulación pausada en Netlify:', { 
-      timestamp: new Date().toISOString(),
-      isRunning: false 
-    });
+    // Forzar actualización del cache
+    stateCache.lastUpdate = 0;
+    stateCache.cachedState = false;
     
-    return { 
-      message: 'Simulación pausada en modo stateless', 
+    console.log('⏸️ Simulación EXPLÍCITAMENTE pausada:', { 
       timestamp: new Date().toISOString(),
       isRunning: false,
       pausedSince: pausedSince
+    });
+    
+    return { 
+      message: 'Simulación pausada - Estado fijado a STOPPED', 
+      timestamp: new Date().toISOString(),
+      isRunning: false,
+      pausedSince: pausedSince,
+      action: 'FORCE_STOP'
     };
   }
 
