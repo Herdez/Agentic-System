@@ -1,4 +1,2 @@
-// Disable PostCSS processing temporarily
-module.exports = {
-  plugins: [],
-}
+// PostCSS configuration - TailwindCSS completely removed for deployment compatibility
+module.exports = {}

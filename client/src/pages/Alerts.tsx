@@ -40,6 +40,7 @@ const Alerts: React.FC = () => {
 
   useEffect(() => {
     loadAlerts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ const Alerts: React.FC = () => {
       setAlerts(socketAlerts);
       applyFilters(socketAlerts);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketAlerts, filters]);
 
   const loadAlerts = async () => {
@@ -100,6 +102,8 @@ const Alerts: React.FC = () => {
     }
   };
 
+  // Helper functions commented out to avoid unused variable warnings
+  /*
   const getSeverityColor = (severity: string) => {
     const colors: { [key: string]: string } = {
       'critical': 'bg-red-100 text-red-800 border-red-200',
@@ -140,6 +144,7 @@ const Alerts: React.FC = () => {
         return <Clock className="w-4 h-4 text-gray-600" />;
     }
   };
+  */
 
   const resetFilters = () => {
     setFilters({

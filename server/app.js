@@ -28,7 +28,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000"]
+      connectSrc: ["'self'", "ws://localhost:5000", "http://localhost:5000", "ws://localhost:5001", "http://localhost:5001"]
     }
   }
 }));
@@ -42,7 +42,11 @@ app.use('/api', limiter);
 
 // Middleware general
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: [
+    "http://localhost:3000", 
+    "http://localhost:3001", 
+    "http://localhost:3002"
+  ],
   credentials: true
 }));
 app.use(morgan('combined'));
@@ -199,7 +203,7 @@ app.use('*', (req, res) => {
 });
 
 // Iniciar servidor
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, async () => {
   console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
   console.log(`🌐 API disponible en http://localhost:${PORT}/api`);

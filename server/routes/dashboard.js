@@ -16,18 +16,22 @@ router.get('/', async (req, res) => {
     let systemStats, recentAlerts, criticalAlerts;
     
     if (demoMode) {
-      // Usar datos demo
+      // Usar datos demo con estadísticas actualizadas
+      const simulationStats = DemoSimulationService.getSimulationStats();
       const demoAgents = DemoSimulationService.getDemoAgents();
       const demoAlerts = DemoSimulationService.getDemoAlerts();
       
       systemStats = {
-        totalAgents: demoAgents.length,
-        activeAgents: demoAgents.filter(a => a.status === 'active').length,
+        totalAgents: simulationStats.totalAgents,
+        activeAgents: simulationStats.activeAgents,
         threatsDetected: demoAgents.reduce((sum, agent) => sum + (agent.metrics?.threatsDetected || 0), 0),
         incidentsResolved: demoAgents.reduce((sum, agent) => sum + (agent.metrics?.incidentsResolved || 0), 0),
         systemUptime: 99.8,
-        responseTime: 0.3,
-        lastUpdate: new Date()
+        responseTime: demoAgents.reduce((sum, agent) => sum + (agent.metrics?.responseTime || 0), 0) / demoAgents.length,
+        lastUpdate: simulationStats.lastUpdate,
+        isRunning: simulationStats.isRunning,
+        recentAlertsCount: simulationStats.recentAlerts,
+        criticalAlertsCount: simulationStats.criticalAlerts
       };
       
       recentAlerts = demoAlerts.slice(-10);

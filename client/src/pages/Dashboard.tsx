@@ -22,14 +22,6 @@ const Dashboard: React.FC = () => {
   const agents = isConnected ? socketAgents : polledAgents;
   const alerts = isConnected ? socketAlerts : polledAlerts;
 
-  useEffect(() => {
-    loadDashboardData();
-    // En Netlify, actualizar cada 5 segundos para máximo dinamismo
-    const interval = setInterval(loadDashboardData, isNetlify ? 5000 : 30000);
-    
-    return () => clearInterval(interval);
-  }, [isNetlify]);
-
   const loadDashboardData = async () => {
     try {
       const promises: Promise<any>[] = [agentService.getSystemStats()];
@@ -71,6 +63,15 @@ const Dashboard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadDashboardData();
+    // En Netlify, actualizar cada 5 segundos para máximo dinamismo
+    const interval = setInterval(loadDashboardData, isNetlify ? 5000 : 30000);
+    
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNetlify]);
 
   const getThreatLevelColor = (level: string) => {
     switch (level) {
@@ -325,12 +326,25 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
-      case 'maintenance':
+      case 'inactive':
+        return 'bg-gray-100 text-gray-600';
+      case 'investigando':
+        return 'bg-blue-100 text-blue-800';
+      case 'respondiendo':
+        return 'bg-orange-100 text-orange-800';
+      case 'escaneando':
+        return 'bg-purple-100 text-purple-800';
+      case 'monitoreo':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'mantenimiento':
         return 'bg-yellow-100 text-yellow-800';
       case 'error':
         return 'bg-red-100 text-red-800';
+      // Estados legacy por compatibilidad
+      case 'maintenance':
+        return 'bg-yellow-100 text-yellow-800';
       case 'scanning':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -399,30 +413,31 @@ const AlertItem: React.FC<{ alert: Alert }> = ({ alert }) => {
 
   const formatTime = (timestamp: string | Date) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('es-ES', { 
+    return date.toLocaleString('es-ES', { 
       hour: '2-digit', 
-      minute: '2-digit' 
+      minute: '2-digit',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
-  // Obtener el nombre específico de la amenaza o usar el título como fallback
-  const threatName = (alert as any).name || alert.title || alert.threat_type || alert.type || 'Security Alert';
-  const threatIcon = (alert as any).threat_icon || '';
+  // Obtener el nombre específico de la amenaza usando los datos correctos
+  const threatName = alert.message || alert.title || alert.threat_type || 'Security Alert';
+  const agentName = alert.agentType ? alert.agentType.replace('_', ' ').toUpperCase() : 'SYSTEM';
+  const sourceIP = alert.details?.sourceIP || 'Unknown';
 
   return (
     <div className={`p-3 rounded-lg border ${getSeverityColor(alert.severity || 'low')}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            {threatIcon && <span className="text-sm">{threatIcon}</span>}
-            <p className="text-sm font-medium">{threatName}</p>
+            <p className="text-sm font-medium text-gray-900">{threatName}</p>
           </div>
-          <p className="text-xs opacity-75 mt-1">
-            {alert.source && `${alert.source} - `}
-            {formatTime(alert.timestamp || alert.createdAt || new Date())}
+          <p className="text-xs text-gray-600 mt-1">
+            {agentName} • {sourceIP} • {formatTime(alert.timestamp || alert.createdAt || new Date())}
           </p>
-          {alert.description && (
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{alert.description}</p>
+          {alert.details?.description && (
+            <p className="text-xs text-gray-500 mt-1">{alert.details.description}</p>
           )}
         </div>
         <div className="text-right ml-2">

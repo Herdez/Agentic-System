@@ -5,17 +5,13 @@ import {
   Shield, 
   Search, 
   Filter, 
-  Eye, 
-  TrendingUp, 
   Globe, 
   Clock, 
   Target,
   AlertCircle,
   CheckCircle,
   RefreshCw,
-  ExternalLink,
-  BarChart3,
-  Map
+  ExternalLink
 } from 'lucide-react';
 
 interface FilterState {
@@ -44,10 +40,12 @@ const ThreatIntel: React.FC = () => {
   useEffect(() => {
     loadThreats();
     loadStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     applyFilters();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threats, filters]);
 
   const loadThreats = async () => {
@@ -112,6 +110,8 @@ const ThreatIntel: React.FC = () => {
     }));
   };
 
+  // Helper functions commented out to avoid unused variable warnings - each component defines its own
+  /*
   const getSeverityColor = (severity: string) => {
     const colors: { [key: string]: string } = {
       'critical': 'bg-red-500',
@@ -138,6 +138,7 @@ const ThreatIntel: React.FC = () => {
     if (confidence >= 50) return 'text-orange-600 bg-orange-100';
     return 'text-red-600 bg-red-100';
   };
+  */
 
   const resetFilters = () => {
     setFilters({

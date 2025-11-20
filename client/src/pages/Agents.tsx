@@ -12,6 +12,7 @@ const Agents: React.FC = () => {
 
   useEffect(() => {
     loadAgents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -66,6 +67,8 @@ const Agents: React.FC = () => {
     }
   };
 
+  // Helper functions commented out to avoid unused variable warnings
+  /*
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
@@ -125,6 +128,7 @@ const Agents: React.FC = () => {
     };
     return labels[type] || type;
   };
+  */
 
   if (loading) {
     return (

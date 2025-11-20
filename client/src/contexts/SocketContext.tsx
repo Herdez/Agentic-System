@@ -30,7 +30,7 @@ const getSocketUrl = () => {
   }
   
   // En desarrollo, usar localhost
-  return 'http://localhost:5000';
+  return 'http://localhost:5001';
 };
 
 const SOCKET_URL = getSocketUrl();
