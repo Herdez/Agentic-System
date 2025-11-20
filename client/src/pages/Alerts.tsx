@@ -88,7 +88,16 @@ const Alerts: React.FC = () => {
       filtered = filtered.filter(alert => alert.type === filters.type);
     }
 
-    setFilteredAlerts(filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    setFilteredAlerts(filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.timestamp || (a as any).detection_time);
+      const dateB = new Date(b.createdAt || b.timestamp || (b as any).detection_time);
+      
+      // Si alguna fecha es inválida, ponerla al final
+      if (isNaN(dateA.getTime())) return 1;
+      if (isNaN(dateB.getTime())) return -1;
+      
+      return dateB.getTime() - dateA.getTime();
+    }));
   };
 
   const handleUpdateAlert = async (alertId: string, updates: Partial<Alert>) => {
@@ -539,7 +548,10 @@ const AlertDetailModal: React.FC<AlertDetailModalProps> = ({ alert, onClose, onU
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-1">Timestamp</h4>
                 <p className="text-sm text-gray-700">
-                  {new Date(alert.createdAt).toLocaleString('es-ES')}
+                  {(() => {
+                    const date = new Date(alert.createdAt || alert.timestamp || (alert as any).detection_time);
+                    return !isNaN(date.getTime()) ? date.toLocaleString('es-ES') : 'Fecha no disponible';
+                  })()}
                 </p>
               </div>
             </div>

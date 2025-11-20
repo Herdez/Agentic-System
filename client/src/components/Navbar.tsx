@@ -1,17 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 import { Shield, Menu, X, Bell, User, LogOut } from 'lucide-react';
+import { Alert } from '../types';
+import { alertService } from '../services/api';
 
 const Navbar: React.FC = () => {
   const { state: authState, logout } = useAuth();
-  const { isConnected, alerts } = useSocket();
+  const { isConnected, alerts: socketAlerts } = useSocket();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [polledAlerts, setPolledAlerts] = useState<Alert[]>([]);
   
+  // Detectar si estamos en modo Netlify
+  const isNetlify = window.location.hostname.includes('netlify') || !window.location.hostname.includes('localhost');
+  
+  // Usar alertas de WebSocket si está conectado, sino usar polling
+  const alerts = isConnected ? socketAlerts : polledAlerts;
   const criticalAlerts = alerts.filter(alert => alert.severity === 'critical').length;
+  
+  // Polling de alertas para modo Netlify
+  useEffect(() => {
+    if (!isNetlify || isConnected) return;
+    
+    const loadAlerts = async () => {
+      try {
+        const response = await alertService.getRecentAlerts(10);
+        const alertsData = response.success ? response.data : (response.data || response);
+        if (alertsData && Array.isArray(alertsData)) {
+          setPolledAlerts(alertsData);
+        }
+      } catch (error) {
+        console.error('Error loading alerts for navbar:', error);
+      }
+    };
+    
+    loadAlerts();
+    const interval = setInterval(loadAlerts, 10000); // Cada 10 segundos
+    
+    return () => clearInterval(interval);
+  }, [isNetlify, isConnected]);
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: '📊' },
