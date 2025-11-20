@@ -14,16 +14,47 @@ interface SimulationStats {
 const SimulationControl = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [stats, setStats] = useState<SimulationStats | null>(null);
-  const { socket, agents, alerts } = useSocket();
+  const { socket, agents, alerts, isConnected } = useSocket();
+  const [fallbackAgents, setFallbackAgents] = useState<any[]>([]);
+  const [fallbackAlerts, setFallbackAlerts] = useState<any[]>([]);
+
+  // Función para obtener datos cuando WebSocket no está disponible
+  const fetchFallbackData = useCallback(async () => {
+    if (!isConnected && (!agents?.length || !alerts?.length)) {
+      try {
+        console.log('🔄 Obteniendo datos fallback para Netlify...');
+        
+        // Obtener agentes
+        const agentsResponse = await fetch('/api/agents');
+        const agentsData = await agentsResponse.json();
+        const agentsArray = agentsData?.success ? agentsData.data : [];
+        setFallbackAgents(agentsArray);
+        
+        // Obtener alertas
+        const alertsResponse = await fetch('/api/alerts');
+        const alertsData = await alertsResponse.json();
+        const alertsArray = alertsData?.success ? alertsData.data : [];
+        setFallbackAlerts(alertsArray);
+        
+        console.log('✅ Datos fallback obtenidos:', { agentes: agentsArray.length, alertas: alertsArray.length });
+      } catch (error) {
+        console.error('❌ Error obteniendo datos fallback:', error);
+      }
+    }
+  }, [isConnected, agents, alerts]);
 
   // Calcular estadísticas en tiempo real desde los datos del socket
   const calculateRealTimeStats = useCallback(() => {
-    if (agents && alerts) {
+    // Usar datos del socket si están disponibles, sino usar fallback
+    const dataAgents = (agents && agents.length > 0) ? agents : fallbackAgents;
+    const dataAlerts = (alerts && alerts.length > 0) ? alerts : fallbackAlerts;
+    
+    if (dataAgents && dataAlerts && dataAgents.length > 0) {
       // Filtrar agentes activos (todos excepto inactivos)
-      const activeAgents = agents.filter(agent => agent.status !== 'inactive').length;
+      const activeAgents = dataAgents.filter(agent => agent.status !== 'inactive').length;
       
       // Filtrar solo alertas activas (no resueltas) de la última hora
-      const activeAlerts = alerts.filter(alert => alert.status !== 'resolved');
+      const activeAlerts = dataAlerts.filter(alert => alert.status !== 'resolved');
       const recentAlerts = activeAlerts.filter(alert => {
         const alertTime = new Date(alert.createdAt || alert.timestamp || new Date());
         const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -35,7 +66,7 @@ const SimulationControl = () => {
 
       const stats = {
         isRunning,
-        totalAgents: agents.length,
+        totalAgents: dataAgents.length,
         activeAgents,
         recentAlerts,
         criticalAlerts,
@@ -44,17 +75,18 @@ const SimulationControl = () => {
       
       // Log para debugging
       console.log('🔧 Estadísticas calculadas:', {
-        totalAlertas: alerts.length,
+        totalAlertas: dataAlerts.length,
         alertasActivas: activeAlerts.length,
         alertasRecientes: recentAlerts,
         alertasCriticas: criticalAlerts,
-        agentesActivos: activeAgents
+        agentesActivos: activeAgents,
+        fuenteDatos: dataAgents === agents ? 'WebSocket' : 'Fallback API'
       });
 
       return stats;
     }
     return null;
-  }, [agents, alerts, isRunning]);
+  }, [agents, alerts, isRunning, fallbackAgents, fallbackAlerts]);
 
   // Función para obtener el estado de la simulación - ANTES del useEffect
   const fetchSimulationStatus = useCallback(async () => {
@@ -97,6 +129,18 @@ const SimulationControl = () => {
       console.error('❌ Error obteniendo estado de simulación:', error);
     }
   }, []); // Sin dependencias para evitar re-renders
+
+  // Efecto para cargar datos fallback cuando no hay WebSocket
+  useEffect(() => {
+    if (!isConnected) {
+      console.log('🔄 WebSocket desconectado, cargando datos fallback...');
+      fetchFallbackData();
+      
+      // Polling cada 15 segundos para mantener datos actualizados en Netlify
+      const interval = setInterval(fetchFallbackData, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [isConnected, fetchFallbackData]);
 
   useEffect(() => {
     console.log('🔧 SimulationControl: Inicializando componente con simulación siempre activa');
