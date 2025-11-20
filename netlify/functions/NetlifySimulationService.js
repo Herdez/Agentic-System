@@ -11,39 +11,73 @@ let stateCache = {
   cacheDuration: 30000 // 30 segundos de cache
 };
 
-// Función para determinar estado con cache para mayor estabilidad
+// Función para determinar estado - SIEMPRE ACTIVO para nueva versión
 function determineSimulationState() {
-  const now = Date.now();
+  // Forzar estado siempre activo para eliminar fluctuaciones
+  simulationRunning = true;
+  simulationStartTime = simulationStartTime || Date.now();
+  lastStateChange = Date.now();
   
-  // Si el cache es válido, usar el estado cacheado
-  if (now - stateCache.lastUpdate < stateCache.cacheDuration) {
-    return stateCache.cachedState;
-  }
+  // Actualizar cache con estado siempre activo
+  stateCache.lastUpdate = Date.now();
+  stateCache.cachedState = true;
   
-  // Si han pasado más de 2 minutos sin actualización y no hay start time, asumir pausado
-  if (now - lastStateChange > 120000 && !simulationStartTime) {
-    simulationRunning = false;
-    pausedSince = now;
-  }
-  
-  // Actualizar cache
-  stateCache.lastUpdate = now;
-  stateCache.cachedState = simulationRunning;
-  
-  return simulationRunning;
+  return true; // Siempre retornar activo
 }
 
 // Simulación stateless para Netlify Functions
 class NetlifySimulationService {
   constructor() {
     this.agentTypes = [
-      { id: 'monitor', name: '🕵️ Monitor de Red', status: 'active' },
-      { id: 'firewall', name: '🛡️ Firewall Inteligente', status: 'active' },
-      { id: 'detector', name: '🔍 Detector de Anomalías', status: 'active' },
-      { id: 'responder', name: '⚡ Respuesta de Incidentes', status: 'active' },
-      { id: 'analyst', name: '📊 Analista de Amenazas', status: 'active' },
-      { id: 'auditor', name: '🔐 Auditor de Seguridad', status: 'active' },
-      { id: 'coordinator', name: '🤝 Coordinador', status: 'active' }
+      { 
+        id: 'monitor', 
+        name: '🕵️ Monitor de Red', 
+        status: 'active',
+        description: 'Especialista en monitoreo continuo de tráfico de red y detección de patrones anómalos',
+        capabilities: ['Traffic Analysis', 'Pattern Recognition', 'Real-time Monitoring', 'Network Scanning']
+      },
+      { 
+        id: 'firewall', 
+        name: '🛡️ Firewall Inteligente', 
+        status: 'active',
+        description: 'Sistema de protección perimetral con capacidades de aprendizaje adaptativo',
+        capabilities: ['Packet Filtering', 'Intrusion Prevention', 'Traffic Control', 'Adaptive Rules']
+      },
+      { 
+        id: 'detector', 
+        name: '🔍 Detector de Anomalías', 
+        status: 'active',
+        description: 'Análisis avanzado de comportamientos irregulares y detección de amenazas desconocidas',
+        capabilities: ['Anomaly Detection', 'Behavioral Analysis', 'Machine Learning', 'Threat Classification']
+      },
+      { 
+        id: 'responder', 
+        name: '⚡ Respuesta de Incidentes', 
+        status: 'active',
+        description: 'Coordinador de respuesta automática ante incidentes de seguridad críticos',
+        capabilities: ['Incident Response', 'Automated Mitigation', 'Forensic Analysis', 'Recovery Procedures']
+      },
+      { 
+        id: 'analyst', 
+        name: '📊 Analista de Amenazas', 
+        status: 'active',
+        description: 'Especialista en inteligencia de amenazas y análisis de vectores de ataque',
+        capabilities: ['Threat Intelligence', 'Risk Assessment', 'Vulnerability Analysis', 'IOC Detection']
+      },
+      { 
+        id: 'auditor', 
+        name: '🔐 Auditor de Seguridad', 
+        status: 'active',
+        description: 'Verificación continua de cumplimiento y políticas de seguridad organizacional',
+        capabilities: ['Compliance Monitoring', 'Policy Enforcement', 'Security Auditing', 'Configuration Review']
+      },
+      { 
+        id: 'coordinator', 
+        name: '🤝 Coordinador', 
+        status: 'active',
+        description: 'Orquestador maestro de la estrategia defensiva y coordinación entre agentes',
+        capabilities: ['Team Coordination', 'Strategy Planning', 'Resource Allocation', 'Decision Making']
+      }
     ];
 
     this.threatTypes = [
@@ -58,15 +92,11 @@ class NetlifySimulationService {
     ];
   }
 
-  // Generar agentes con datos dinámicos basados en timestamp
+  // Generar agentes con datos dinámicos basados en timestamp - SIEMPRE ACTIVOS
   getAgents() {
-    const currentlyRunning = determineSimulationState();
+    // Forzar estado siempre activo - nunca retornar agentes pausados
+    const currentlyRunning = true; // Siempre activo
     
-    // Si la simulación está pausada, retornar agentes en estado pausado
-    if (!currentlyRunning) {
-      return this.getPausedAgents();
-    }
-
     const now = Date.now();
     const secondsSeed = Math.floor(now / 5000); // Cambia cada 5 segundos
     
@@ -261,13 +291,9 @@ class NetlifySimulationService {
 
   // Generar alertas dinámicas
   getAlerts() {
-    const currentlyRunning = determineSimulationState();
+    // Forzar estado siempre activo - nunca retornar alertas pausadas
+    const currentlyRunning = true; // Siempre activo
     
-    // Si la simulación está pausada, retornar alertas estáticas
-    if (!currentlyRunning) {
-      return this.getPausedAlerts();
-    }
-
     const now = Date.now();
     const alerts = [];
     const secondsSeed = Math.floor(now / 5000); // Cambiar cada 5 segundos
@@ -372,31 +398,36 @@ class NetlifySimulationService {
     ];
   }
 
-  // Simular estado de simulación con mayor estabilidad
+  // Simular estado de simulación - SIEMPRE ACTIVO
   getSimulationStatus() {
     const now = Date.now();
-    const currentlyRunning = determineSimulationState();
+    const currentlyRunning = true; // Forzar siempre activo
     
-    console.log('📊 getSimulationStatus llamado:', {
-      currentlyRunning,
-      simulationStartTime,
-      lastStateChange: new Date(lastStateChange).toISOString(),
-      cacheValid: (now - stateCache.lastUpdate < stateCache.cacheDuration)
+    console.log('📊 getSimulationStatus llamado - SIEMPRE ACTIVO:', {
+      currentlyRunning: true,
+      simulationStartTime: simulationStartTime || now,
+      lastStateChange: new Date(lastStateChange || now).toISOString(),
+      mode: 'always-active'
     });
     
+    // Asegurar que simulationStartTime esté definido
+    if (!simulationStartTime) {
+      simulationStartTime = now;
+    }
+    
     return {
-      isRunning: currentlyRunning,
+      isRunning: true, // Siempre activo
       agentsCount: 7,
-      alertsCount: currentlyRunning ? this.getAlerts().length : 3,
-      uptime: simulationStartTime && currentlyRunning ? Math.floor((now - simulationStartTime) / 1000) : 0,
-      startTime: simulationStartTime ? new Date(simulationStartTime).toISOString() : null,
+      alertsCount: this.getAlerts().length,
+      uptime: Math.floor((now - simulationStartTime) / 1000),
+      startTime: new Date(simulationStartTime).toISOString(),
       lastUpdate: new Date().toISOString(),
-      mode: 'netlify-stateless-stable',
-      pausedSince: pausedSince && !currentlyRunning ? new Date(pausedSince).toISOString() : null,
-      stateChangeTime: new Date(lastStateChange).toISOString(),
+      mode: 'always-active-stable',
+      pausedSince: null, // Nunca pausado
+      stateChangeTime: new Date(simulationStartTime).toISOString(),
       cacheStatus: {
-        valid: (now - stateCache.lastUpdate < stateCache.cacheDuration),
-        age: now - stateCache.lastUpdate
+        valid: true,
+        age: 0
       }
     };
   }
@@ -502,64 +533,79 @@ class NetlifySimulationService {
   startSimulation() {
     simulationRunning = true;
     pausedSince = null;
-    simulationStartTime = Date.now();
+    simulationStartTime = simulationStartTime || Date.now(); // Preservar tiempo inicial si ya existe
     lastStateChange = Date.now();
     
-    // Forzar actualización del cache
-    stateCache.lastUpdate = 0;
+    // Forzar actualización del cache con estado activo
+    stateCache.lastUpdate = Date.now();
     stateCache.cachedState = true;
     
-    console.log('🚀 Simulación EXPLÍCITAMENTE iniciada:', { 
-      timestamp: new Date().toISOString(),
-      isRunning: true,
-      simulationStartTime: simulationStartTime
-    });
-    
-    return { 
-      message: 'Simulación iniciada - Estado fijado a RUNNING', 
+    console.log('🚀 Simulación SIEMPRE ACTIVA - confirmación de inicio:', { 
       timestamp: new Date().toISOString(),
       isRunning: true,
       simulationStartTime: simulationStartTime,
-      action: 'FORCE_START'
+      mode: 'always-active'
+    });
+    
+    return { 
+      message: 'Sistema de defensa siempre activo - operativo 24/7', 
+      timestamp: new Date().toISOString(),
+      isRunning: true,
+      simulationStartTime: simulationStartTime,
+      action: 'ALWAYS_ACTIVE'
     };
   }
 
   stopSimulation() {
-    simulationRunning = false;
-    pausedSince = Date.now();
-    simulationStartTime = null;
+    // En modo siempre activo, ignorar comandos de parada y mantener activo
+    simulationRunning = true;
+    pausedSince = null;
+    simulationStartTime = simulationStartTime || Date.now();
     lastStateChange = Date.now();
     
-    // Forzar actualización del cache
-    stateCache.lastUpdate = 0;
-    stateCache.cachedState = false;
+    // Mantener cache activo
+    stateCache.lastUpdate = Date.now();
+    stateCache.cachedState = true;
     
-    console.log('⏸️ Simulación EXPLÍCITAMENTE pausada:', { 
+    console.log('🛡️ Comando STOP ignorado - Sistema siempre activo:', { 
       timestamp: new Date().toISOString(),
-      isRunning: false,
-      pausedSince: pausedSince
+      isRunning: true,
+      simulationStartTime: simulationStartTime,
+      mode: 'always-active-override'
     });
     
     return { 
-      message: 'Simulación pausada - Estado fijado a STOPPED', 
+      message: 'Sistema de defensa permanece activo - protección continua habilitada', 
       timestamp: new Date().toISOString(),
-      isRunning: false,
-      pausedSince: pausedSince,
-      action: 'FORCE_STOP'
+      isRunning: true,
+      simulationStartTime: simulationStartTime,
+      action: 'STOP_IGNORED_ALWAYS_ACTIVE'
     };
   }
 
   restartSimulation() {
     simulationRunning = true;
     pausedSince = null;
-    simulationStartTime = Date.now();
+    simulationStartTime = simulationStartTime || Date.now(); // Preservar tiempo inicial
     lastStateChange = Date.now();
     
-    return { 
-      message: 'Simulación reiniciada en modo stateless', 
+    // Actualizar cache con estado siempre activo
+    stateCache.lastUpdate = Date.now();
+    stateCache.cachedState = true;
+    
+    console.log('🔄 Sistema ya activo - confirmación de continuidad:', { 
       timestamp: new Date().toISOString(),
       isRunning: true,
-      simulationStartTime: simulationStartTime
+      simulationStartTime: simulationStartTime,
+      mode: 'continuous-operation'
+    });
+    
+    return { 
+      message: 'Sistema de defensa en operación continua - sin reinicio necesario', 
+      timestamp: new Date().toISOString(),
+      isRunning: true,
+      simulationStartTime: simulationStartTime,
+      action: 'CONTINUOUS_OPERATION'
     };
   }
 
