@@ -39,6 +39,18 @@ const Agents: React.FC = () => {
       }
       
       console.log('🤖 Loaded agents:', agentsData.length); // Debug
+      
+      // Debug detallado de cada agente
+      agentsData.forEach((agent, index) => {
+        console.log(`🔍 Agente ${index + 1}:`, {
+          name: agent.name,
+          type: agent.type, 
+          status: agent.status,
+          _id: agent._id,
+          fullAgent: agent
+        });
+      });
+      
       setAgents(agentsData);
     } catch (error) {
       console.error('Error loading agents:', error);
@@ -156,17 +168,17 @@ const Agents: React.FC = () => {
           <div className="flex items-center space-x-4 text-sm">
             <div className="text-gray-600">
               <span className="font-medium text-green-600">
-                {agents.filter(a => a.status === 'active').length}
+                {agents.filter(a => (a.status || 'inactive') === 'active').length}
               </span> activos
             </div>
             <div className="text-gray-600">
               <span className="font-medium text-blue-600">
-                {agents.filter(a => ['investigating', 'responding', 'scanning'].includes(a.status)).length}
+                {agents.filter(a => ['investigating', 'responding', 'scanning'].includes(a.status || 'inactive')).length}
               </span> trabajando
             </div>
             <div className="text-gray-600">
               <span className="font-medium text-gray-500">
-                {agents.filter(a => ['inactive', 'maintenance'].includes(a.status)).length}
+                {agents.filter(a => ['inactive', 'maintenance'].includes(a.status || 'inactive')).length}
               </span> offline
             </div>
           </div>
@@ -340,9 +352,10 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onAction, isLoading }) => 
       'threat_intelligence': 'Inteligencia de Amenazas',
       'defense_coordination': 'Coordinación de Defensa',
       'audit_compliance': 'Auditoría y Cumplimiento',
-      'recovery_resilience': 'Recuperación y Resiliencia'
+      'recovery_resilience': 'Recuperación y Resiliencia',
+      'unknown': 'Tipo Desconocido'
     };
-    return labels[type] || type;
+    return labels[type] || (type || 'Tipo Desconocido');
   };
 
   return (
@@ -350,16 +363,16 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onAction, isLoading }) => 
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl">{getAgentIcon(agent.type)}</div>
+          <div className="text-2xl">{getAgentIcon(agent.type || 'unknown')}</div>
           <div>
-            <h3 className="font-semibold text-gray-900">{agent.name}</h3>
-            <p className="text-sm text-gray-600">{getAgentTypeLabel(agent.type)}</p>
+            <h3 className="font-semibold text-gray-900">{agent.name || 'Agente Sin Nombre'}</h3>
+            <p className="text-sm text-gray-600">{getAgentTypeLabel(agent.type || 'unknown')}</p>
           </div>
         </div>
         
-        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border ${getStatusColor(agent.status)}`}>
-          {getStatusIcon(agent.status)}
-          <span className="text-xs font-medium">{agent.status.toUpperCase()}</span>
+        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full border ${getStatusColor(agent.status || 'inactive')}`}>
+          {getStatusIcon(agent.status || 'inactive')}
+          <span className="text-xs font-medium">{(agent.status || 'INACTIVE').toUpperCase()}</span>
         </div>
       </div>
 
