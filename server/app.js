@@ -49,20 +49,27 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Conexión MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blockchain-defense', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('✅ MongoDB conectado exitosamente');
-  isDemoMode = false;
-})
-.catch(err => {
-  console.error('❌ Error conectando MongoDB:', err.message);
-  console.log('🎮 Iniciando en modo DEMO (sin base de datos)');
+// Conexión MongoDB con timeout rápido para modo demo
+if (process.env.SKIP_MONGODB === 'true' || !process.env.MONGODB_URI) {
+  console.log('🎮 Iniciando directamente en modo DEMO (sin base de datos)');
   isDemoMode = true;
-});
+} else {
+  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blockchain-defense', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 3000, // 3 segundos timeout
+    connectTimeoutMS: 3000
+  })
+  .then(() => {
+    console.log('✅ MongoDB conectado exitosamente');
+    isDemoMode = false;
+  })
+  .catch(err => {
+    console.error('❌ Error conectando MongoDB:', err.message);
+    console.log('🎮 Iniciando en modo DEMO (sin base de datos)');
+    isDemoMode = true;
+  });
+}
 
 // Importar servicios
 const AgentService = require('./services/AgentService');

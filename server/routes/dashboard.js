@@ -2,15 +2,44 @@ const express = require('express');
 const router = express.Router();
 const AgentService = require('../services/AgentService');
 const AlertService = require('../services/AlertService');
+const DemoSimulationService = require('../services/DemoSimulationService');
+
+// Función para detectar modo demo
+const isDemoMode = () => {
+  return process.env.SKIP_MONGODB === 'true' || !process.env.MONGODB_URI || process.env.NODE_ENV === 'demo';
+};
 
 // GET /api/dashboard - Obtener datos completos del dashboard
 router.get('/', async (req, res) => {
   try {
-    const [systemStats, recentAlerts, criticalAlerts] = await Promise.all([
-      AgentService.getSystemStats(),
-      AlertService.getRecentAlerts(10),
-      AlertService.getCriticalAlerts()
-    ]);
+    const demoMode = isDemoMode();
+    let systemStats, recentAlerts, criticalAlerts;
+    
+    if (demoMode) {
+      // Usar datos demo
+      const demoAgents = DemoSimulationService.getDemoAgents();
+      const demoAlerts = DemoSimulationService.getDemoAlerts();
+      
+      systemStats = {
+        totalAgents: demoAgents.length,
+        activeAgents: demoAgents.filter(a => a.status === 'active').length,
+        threatsDetected: demoAgents.reduce((sum, agent) => sum + (agent.metrics?.threatsDetected || 0), 0),
+        incidentsResolved: demoAgents.reduce((sum, agent) => sum + (agent.metrics?.incidentsResolved || 0), 0),
+        systemUptime: 99.8,
+        responseTime: 0.3,
+        lastUpdate: new Date()
+      };
+      
+      recentAlerts = demoAlerts.slice(-10);
+      criticalAlerts = demoAlerts.filter(a => a.severity === 'critical');
+    } else {
+      // Usar base de datos real
+      [systemStats, recentAlerts, criticalAlerts] = await Promise.all([
+        AgentService.getSystemStats(),
+        AlertService.getRecentAlerts(10),
+        AlertService.getCriticalAlerts()
+      ]);
+    }
     
     // Datos adicionales del dashboard
     const dashboardData = {
@@ -20,6 +49,7 @@ router.get('/', async (req, res) => {
       networkMap: generateNetworkMap(),
       threatTimeline: generateThreatTimeline(),
       agentPerformance: generateAgentPerformance(),
+      demoMode,
       lastUpdate: new Date()
     };
     
@@ -28,6 +58,7 @@ router.get('/', async (req, res) => {
       data: dashboardData
     });
   } catch (error) {
+    console.error('Error obteniendo dashboard:', error);
     res.status(500).json({
       success: false,
       error: error.message

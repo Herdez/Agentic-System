@@ -3,14 +3,18 @@ const router = express.Router();
 const SimulationService = require('../services/SimulationService');
 const DemoSimulationService = require('../services/DemoSimulationService');
 
-// Variable para detectar modo demo (se puede importar desde app.js si es necesario)
-let isDemoMode = true; // Por defecto en modo demo
+// Función para detectar modo demo desde variables de entorno o configuración
+const isDemoMode = () => {
+  return process.env.SKIP_MONGODB === 'true' || !process.env.MONGODB_URI || process.env.NODE_ENV === 'demo';
+};
 
 // Obtener estado de la simulación
 router.get('/status', async (req, res) => {
   try {
     let stats;
-    if (isDemoMode) {
+    const demoMode = isDemoMode();
+    
+    if (demoMode) {
       stats = DemoSimulationService.getSimulationStats();
     } else {
       stats = await SimulationService.getSimulationStats();
@@ -18,7 +22,7 @@ router.get('/status', async (req, res) => {
     
     res.json({
       success: true,
-      data: { ...stats, demoMode: isDemoMode }
+      data: { ...stats, demoMode }
     });
   } catch (error) {
     console.error('Error obteniendo estado de simulación:', error);
@@ -32,7 +36,9 @@ router.get('/status', async (req, res) => {
 // Iniciar simulación
 router.post('/start', (req, res) => {
   try {
-    if (isDemoMode) {
+    const demoMode = isDemoMode();
+    
+    if (demoMode) {
       DemoSimulationService.startSimulation();
     } else {
       SimulationService.startSimulation();
@@ -40,7 +46,7 @@ router.post('/start', (req, res) => {
     
     res.json({
       success: true,
-      message: `Simulación ${isDemoMode ? 'demo' : ''} iniciada exitosamente`
+      message: `Simulación ${demoMode ? 'demo' : ''} iniciada exitosamente`
     });
   } catch (error) {
     console.error('Error iniciando simulación:', error);
@@ -54,7 +60,9 @@ router.post('/start', (req, res) => {
 // Detener simulación
 router.post('/stop', (req, res) => {
   try {
-    if (isDemoMode) {
+    const demoMode = isDemoMode();
+    
+    if (demoMode) {
       DemoSimulationService.stopSimulation();
     } else {
       SimulationService.stopSimulation();
@@ -62,7 +70,7 @@ router.post('/stop', (req, res) => {
     
     res.json({
       success: true,
-      message: `Simulación ${isDemoMode ? 'demo' : ''} detenida exitosamente`
+      message: `Simulación ${demoMode ? 'demo' : ''} detenida exitosamente`
     });
   } catch (error) {
     console.error('Error deteniendo simulación:', error);
@@ -76,7 +84,9 @@ router.post('/stop', (req, res) => {
 // Reiniciar simulación
 router.post('/restart', (req, res) => {
   try {
-    if (isDemoMode) {
+    const demoMode = isDemoMode();
+    
+    if (demoMode) {
       DemoSimulationService.stopSimulation();
       setTimeout(() => {
         DemoSimulationService.startSimulation();
@@ -90,7 +100,7 @@ router.post('/restart', (req, res) => {
     
     res.json({
       success: true,
-      message: `Simulación ${isDemoMode ? 'demo' : ''} reiniciada exitosamente`
+      message: `Simulación ${demoMode ? 'demo' : ''} reiniciada exitosamente`
     });
   } catch (error) {
     console.error('Error reiniciando simulación:', error);

@@ -1,17 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const AgentService = require('../services/AgentService');
+const DemoSimulationService = require('../services/DemoSimulationService');
+
+// Función para detectar modo demo
+const isDemoMode = () => {
+  return process.env.SKIP_MONGODB === 'true' || !process.env.MONGODB_URI || process.env.NODE_ENV === 'demo';
+};
 
 // GET /api/agents - Obtener todos los agentes
 router.get('/', async (req, res) => {
   try {
-    const agents = await AgentService.getAllAgents();
+    const demoMode = isDemoMode();
+    let agents;
+    
+    if (demoMode) {
+      agents = DemoSimulationService.getDemoAgents();
+    } else {
+      agents = await AgentService.getAllAgents();
+    }
+    
     res.json({
       success: true,
       data: agents,
-      count: agents.length
+      count: agents.length,
+      demoMode
     });
   } catch (error) {
+    console.error('Error obteniendo agentes:', error);
     res.status(500).json({
       success: false,
       error: error.message

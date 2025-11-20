@@ -1,19 +1,34 @@
 const express = require('express');
 const router = express.Router();
 const AlertService = require('../services/AlertService');
+const DemoSimulationService = require('../services/DemoSimulationService');
+
+// Función para detectar modo demo
+const isDemoMode = () => {
+  return process.env.SKIP_MONGODB === 'true' || !process.env.MONGODB_URI || process.env.NODE_ENV === 'demo';
+};
 
 // GET /api/alerts - Obtener alertas recientes
 router.get('/', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
-    const alerts = await AlertService.getRecentAlerts(limit);
+    const demoMode = isDemoMode();
+    let alerts;
+    
+    if (demoMode) {
+      alerts = DemoSimulationService.getDemoAlerts().slice(-limit);
+    } else {
+      alerts = await AlertService.getRecentAlerts(limit);
+    }
     
     res.json({
       success: true,
       data: alerts,
-      count: alerts.length
+      count: alerts.length,
+      demoMode
     });
   } catch (error) {
+    console.error('Error obteniendo alertas recientes:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -24,14 +39,23 @@ router.get('/', async (req, res) => {
 // GET /api/alerts/critical - Obtener alertas críticas
 router.get('/critical', async (req, res) => {
   try {
-    const alerts = await AlertService.getCriticalAlerts();
+    const demoMode = isDemoMode();
+    let alerts;
+    
+    if (demoMode) {
+      alerts = DemoSimulationService.getDemoAlerts().filter(a => a.severity === 'critical');
+    } else {
+      alerts = await AlertService.getCriticalAlerts();
+    }
     
     res.json({
       success: true,
       data: alerts,
-      count: alerts.length
+      count: alerts.length,
+      demoMode
     });
   } catch (error) {
+    console.error('Error obteniendo alertas críticas:', error);
     res.status(500).json({
       success: false,
       error: error.message
