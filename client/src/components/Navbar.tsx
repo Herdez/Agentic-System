@@ -31,9 +31,13 @@ const Navbar: React.FC = () => {
     
     const loadAlerts = async () => {
       try {
-        const response = await alertService.getRecentAlerts(10);
+        const response = await alertService.getRecentAlerts(50); // Aumentar a 50
         const alertsData = response.success ? response.data : (response.data || response);
         if (alertsData && Array.isArray(alertsData)) {
+          console.log('🔔 Navbar: Alertas recibidas:', alertsData.length);
+          // Debug de severidades
+          const severities = alertsData.map(a => a.severity).filter(Boolean);
+          console.log('🔔 Severidades encontradas:', Array.from(new Set(severities)));
           setPolledAlerts(alertsData);
         }
       } catch (error) {

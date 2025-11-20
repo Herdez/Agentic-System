@@ -11,7 +11,8 @@ import {
   AlertCircle,
   CheckCircle,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react';
 
 interface FilterState {
@@ -434,6 +435,19 @@ interface ThreatDetailModalProps {
 }
 
 const ThreatDetailModal: React.FC<ThreatDetailModalProps> = ({ threat, onClose }) => {
+  // Cerrar modal con tecla Escape
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [onClose]);
   const getSeverityColor = (severity: string) => {
     const colors: { [key: string]: string } = {
       'critical': 'bg-red-100 text-red-800 border-red-200',
@@ -452,29 +466,36 @@ const ThreatDetailModal: React.FC<ThreatDetailModalProps> = ({ threat, onClose }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={onClose} // Cerrar al hacer clic en el fondo
+    >
+      <div 
+        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()} // Evitar cerrar al hacer clic dentro del modal
+      >
+        <div className="p-4 sm:p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <Target className="w-8 h-8 text-red-600" />
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900">{threat.name}</h2>
-                <p className="text-gray-600 capitalize">{threat.type}</p>
+            <div className="flex items-center space-x-3 flex-1 pr-4">
+              <Target className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">{threat.name}</h2>
+                <p className="text-gray-600 capitalize text-sm sm:text-base">{threat.type}</p>
               </div>
             </div>
             
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              title="Cerrar"
             >
-              <RefreshCw className="w-6 h-6 text-gray-500" />
+              <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className={`p-4 rounded-lg border ${getSeverityColor(threat.severity)}`}>
               <div className="text-center">
                 <div className="text-2xl font-bold">{threat.severity.toUpperCase()}</div>
