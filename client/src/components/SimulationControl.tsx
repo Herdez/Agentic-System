@@ -78,6 +78,17 @@ const SimulationControl = () => {
         setIsRunning(prev => {
           if (newIsRunning !== prev) {
             console.log('🔧 CAMBIANDO estado isRunning:', prev, '->', newIsRunning);
+            
+            // Guardar en localStorage para persistencia
+            try {
+              localStorage.setItem('sim-state', JSON.stringify({
+                isRunning: newIsRunning,
+                timestamp: Date.now()
+              }));
+            } catch (e) {
+              console.warn('No se pudo guardar estado en localStorage:', e);
+            }
+            
             return newIsRunning;
           } else {
             console.log('🔧 Estado isRunning sin cambios:', prev);
@@ -121,13 +132,13 @@ const SimulationControl = () => {
         socket.off('simulation_update', handleSimulationUpdate);
       };
     } else {
-      console.log('🔧 SimulationControl: Sin WebSocket, usando polling cada 10 segundos');
+      console.log('🔧 SimulationControl: Sin WebSocket, usando polling cada 20 segundos');
       
-      // Polling simple y consistente para Netlify
+      // Polling menos agresivo para evitar cambios erráticos en Netlify
       const interval = setInterval(() => {
-        console.log('🔧 Ejecutando polling de estado...');
+        console.log('🔧 Ejecutando polling de estado (cada 20s)...');
         fetchSimulationStatus();
-      }, 10000); // Cada 10 segundos
+      }, 20000); // Cada 20 segundos (más estable)
       
       return () => clearInterval(interval);
     }
