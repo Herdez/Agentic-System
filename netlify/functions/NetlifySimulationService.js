@@ -1,6 +1,7 @@
 // Variable global para mantener el estado de la simulación en memoria
-let simulationRunning = true;
-let pausedSince = null;
+// En Netlify Functions, inicia pausado por defecto para mejor control
+let simulationRunning = false;
+let pausedSince = Date.now();
 
 // Simulación stateless para Netlify Functions
 class NetlifySimulationService {
@@ -494,6 +495,89 @@ class NetlifySimulationService {
       'North Korea', 'Netherlands', 'Canada', 'Australia', 'Japan'
     ];
     return countries[Math.abs(Math.floor(Math.sin(seed * 2.1) * countries.length)) % countries.length];
+  }
+
+  // Generar amenazas dinámicas para ThreatIntel
+  getThreats() {
+    const now = Date.now();
+    const secondsSeed = Math.floor(now / 10000); // Cambia cada 10 segundos
+    const threats = [];
+    
+    // Generar 15-25 amenazas dinámicamente
+    const threatCount = Math.floor(Math.sin(secondsSeed / 50) * 5 + 20); // 15-25
+    
+    for (let i = 0; i < threatCount; i++) {
+      const seed = secondsSeed + i * 100;
+      const severityRand = Math.sin(seed / 30);
+      let severity = 'low';
+      if (severityRand > 0.7) severity = 'critical';
+      else if (severityRand > 0.4) severity = 'high';
+      else if (severityRand > 0.1) severity = 'medium';
+
+      const confidence = Math.floor(Math.sin(seed / 20) * 30 + 70); // 70-100
+      const type = this.threatTypes[Math.abs(Math.floor(Math.sin(seed * 1.5) * this.threatTypes.length)) % this.threatTypes.length];
+      
+      threats.push({
+        id: `threat-${i + 1}`,
+        name: `${type} Attempt ${String(i + 1).padStart(3, '0')}`,
+        description: `Advanced ${type.toLowerCase()} targeting critical infrastructure. Detected through AI behavioral analysis and threat intelligence correlation.`,
+        type: type.toLowerCase().replace(/\s+/g, '_'),
+        severity: severity,
+        confidence: confidence,
+        source: 'AI Threat Intelligence',
+        lastSeen: new Date(now - Math.floor(Math.sin(seed / 15) * 86400000)).toISOString(),
+        indicators: [
+          this.getRandomIP(seed),
+          this.getRandomIP(seed * 1.1),
+          `${type.toLowerCase().replace(/\s+/g, '_')}_pattern_${i + 1}.rule`
+        ],
+        targetedSystems: [
+          this.locations[Math.abs(Math.floor(Math.sin(seed * 2) * this.locations.length)) % this.locations.length]
+        ]
+      });
+    }
+
+    return threats.sort((a, b) => {
+      const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+      return (severityOrder[b.severity] || 0) - (severityOrder[a.severity] || 0);
+    });
+  }
+
+  // Generar estadísticas de amenazas
+  getThreatStats() {
+    const now = Date.now();
+    const secondsSeed = Math.floor(now / 10000);
+    
+    const threats = this.getThreats();
+    const critical = threats.filter(t => t.severity === 'critical').length;
+    const high = threats.filter(t => t.severity === 'high').length;
+    const medium = threats.filter(t => t.severity === 'medium').length;
+    const low = threats.filter(t => t.severity === 'low').length;
+    
+    return {
+      total: threats.length,
+      bySeverity: {
+        critical,
+        high,
+        medium,
+        low
+      },
+      recentActivity: {
+        last24h: Math.floor(Math.sin(secondsSeed / 40) * 15 + 25), // 10-40
+        last7d: Math.floor(Math.sin(secondsSeed / 60) * 50 + 100), // 50-150
+        lastMonth: Math.floor(Math.sin(secondsSeed / 80) * 200 + 400) // 200-600
+      },
+      topSources: [
+        { name: 'AI Threat Intelligence', count: Math.floor(threats.length * 0.6) },
+        { name: 'External Feeds', count: Math.floor(threats.length * 0.3) },
+        { name: 'Internal Detection', count: Math.floor(threats.length * 0.1) }
+      ],
+      confidence: {
+        high: threats.filter(t => t.confidence >= 85).length,
+        medium: threats.filter(t => t.confidence >= 70 && t.confidence < 85).length,
+        low: threats.filter(t => t.confidence < 70).length
+      }
+    };
   }
 }
 

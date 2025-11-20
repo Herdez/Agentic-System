@@ -62,6 +62,18 @@ exports.handler = async (event, context) => {
           data: demoService.getSimulationStatus()
         };
       }
+      else if (path === '/threats' || path.endsWith('/threats')) {
+        response = {
+          success: true,
+          data: demoService.getThreats()
+        };
+      }
+      else if (path === '/threats/stats/overview' || path.endsWith('/threats/stats/overview')) {
+        response = {
+          success: true,
+          data: demoService.getThreatStats()
+        };
+      }
       else {
         return {
           statusCode: 404,

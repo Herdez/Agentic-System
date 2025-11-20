@@ -121,10 +121,32 @@ const SimulationControl = () => {
         socket.off('simulation_update', handleSimulationUpdate);
       };
     } else {
-      console.log('🔧 SimulationControl: Sin WebSocket, usando polling cada 30 segundos');
-      // Si no hay WebSocket (Netlify), usar polling menos frecuente
-      const interval = setInterval(fetchSimulationStatus, 30000);
-      return () => clearInterval(interval);
+      console.log('🔧 SimulationControl: Sin WebSocket, configurando polling inteligente');
+      
+      // Polling inteligente: más frecuente si está corriendo, menos si está pausado
+      const setupPolling = () => {
+        const currentInterval = isRunning ? 15000 : 60000; // 15s si está corriendo, 60s si está pausado
+        console.log(`🔧 Configurando polling cada ${currentInterval/1000}s (isRunning: ${isRunning})`);
+        
+        return setInterval(() => {
+          if (isRunning || Date.now() % 60000 < 5000) { // Cada minuto si está pausado
+            fetchSimulationStatus();
+          }
+        }, currentInterval);
+      };
+
+      const interval = setupPolling();
+      
+      // Reconfigurar polling cuando cambie el estado
+      const reconfigInterval = setInterval(() => {
+        clearInterval(interval);
+        setupPolling();
+      }, 30000);
+      
+      return () => {
+        clearInterval(interval);
+        clearInterval(reconfigInterval);
+      };
     }
   }, [socket, fetchSimulationStatus]); // Incluir fetchSimulationStatus como dependencia
 
