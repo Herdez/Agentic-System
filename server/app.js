@@ -211,22 +211,18 @@ server.listen(PORT, async () => {
     console.log('🎮 Modo DEMO activado - simulación sin base de datos');
     console.log('✅ Agentes demo inicializados');
     
-    // Iniciar simulación demo automáticamente después de 2 segundos
-    setTimeout(() => {
-      DemoSimulationService.setSocketIO(io);
-      DemoSimulationService.startSimulation();
-      console.log('🎮 Simulación demo iniciada automáticamente');
-    }, 2000);
+    // Configurar Socket.IO pero NO iniciar automáticamente
+    DemoSimulationService.setSocketIO(io);
+    console.log('⏸️ Simulación demo lista (usar botón para iniciar)');
   } else {
     // Inicializar agentes por defecto
     try {
       await AgentService.initializeDefaultAgents();
       console.log('✅ Sistema de agentes inicializado');
       
-      // Configurar Socket.IO en el servicio de simulación y iniciar automáticamente
+      // Configurar Socket.IO pero NO iniciar automáticamente
       SimulationService.setSocketIO(io);
-      SimulationService.startSimulation();
-      console.log('🎮 Simulación de agentes iniciada automáticamente');
+      console.log('⏸️ Simulación lista (usar botón para iniciar)');
     } catch (error) {
       console.error('❌ Error inicializando sistema:', error);
     }

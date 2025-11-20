@@ -3,6 +3,7 @@ class DemoSimulationService {
   constructor() {
     this.isRunning = false;
     this.simulationInterval = null;
+    this.attackInterval = null;
     this.socketIO = null;
     this.demoAgents = [
       {
@@ -65,7 +66,7 @@ class DemoSimulationService {
   startSimulation() {
     if (this.isRunning) {
       console.log('⚠️ Simulación demo ya está ejecutándose');
-      return;
+      return false;
     }
 
     console.log('🎮 Iniciando simulación demo de agentes...');
@@ -77,17 +78,24 @@ class DemoSimulationService {
     }, 3000);
 
     // Simular ataques ocasionales cada 15 segundos
-    setInterval(() => {
+    this.attackInterval = setInterval(() => {
       if (Math.random() < 0.7) {
         this.simulateAttackScenario();
       }
     }, 15000);
+
+    // Emitir estado de inicio
+    if (this.socketIO) {
+      this.socketIO.emit('simulation-status', { running: true });
+    }
+
+    return true;
   }
 
   stopSimulation() {
     if (!this.isRunning) {
       console.log('⚠️ Simulación demo no está ejecutándose');
-      return;
+      return false;
     }
 
     console.log('⏹️ Deteniendo simulación demo...');
@@ -97,6 +105,18 @@ class DemoSimulationService {
       clearInterval(this.simulationInterval);
       this.simulationInterval = null;
     }
+
+    if (this.attackInterval) {
+      clearInterval(this.attackInterval);
+      this.attackInterval = null;
+    }
+
+    // Emitir estado de parada
+    if (this.socketIO) {
+      this.socketIO.emit('simulation-status', { running: false });
+    }
+
+    return true;
   }
 
   runSimulationCycle() {

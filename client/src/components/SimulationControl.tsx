@@ -25,6 +25,7 @@ const SimulationControl = () => {
     if (socket) {
       // Si hay WebSocket, escuchar actualizaciones en tiempo real
       socket.on('simulation-status', (data: { running: boolean }) => {
+        console.log('Estado simulación recibido:', data);
         setIsRunning(data.running);
       });
 
@@ -32,13 +33,14 @@ const SimulationControl = () => {
         setStats(data);
       });
 
+      // Cleanup listeners
       return () => {
         socket.off('simulation-status');
         socket.off('simulation_update');
       };
     } else {
-      // Si no hay WebSocket (Netlify), usar polling
-      const interval = setInterval(fetchSimulationStatus, 15000); // Cada 15 segundos
+      // Si no hay WebSocket (Netlify), usar polling cada 10 segundos
+      const interval = setInterval(fetchSimulationStatus, 10000);
       return () => clearInterval(interval);
     }
   }, [socket]);
@@ -51,6 +53,7 @@ const SimulationControl = () => {
       if (data) {
         setStats(data);
         setIsRunning(data?.isRunning || false);
+        console.log('Estado actual simulación:', data?.isRunning);
       }
     } catch (error) {
       console.error('Error obteniendo estado de simulación:', error);
@@ -60,14 +63,16 @@ const SimulationControl = () => {
   const handleStartSimulation = async () => {
     try {
       const response = await simulationService.start();
-      addToast({
-        type: 'success',
-        title: 'Simulación iniciada',
-        message: 'La simulación de agentes ha comenzado exitosamente'
-      });
-      setIsRunning(true);
-      // Actualizar estado después de iniciar
-      setTimeout(fetchSimulationStatus, 1000);
+      if (response.success) {
+        addToast({
+          type: 'success',
+          title: 'Simulación iniciada',
+          message: 'La simulación de agentes ha comenzado exitosamente'
+        });
+        setIsRunning(true);
+        // Actualizar estado después de iniciar
+        setTimeout(fetchSimulationStatus, 1000);
+      }
     } catch (error) {
       addToast({
         type: 'error',
@@ -80,14 +85,16 @@ const SimulationControl = () => {
   const handleStopSimulation = async () => {
     try {
       const response = await simulationService.stop();
-      addToast({
-        type: 'info',
-        title: 'Simulación detenida',
-        message: 'La simulación de agentes ha sido pausada'
-      });
-      setIsRunning(false);
-      // Actualizar estado después de detener
-      setTimeout(fetchSimulationStatus, 1000);
+      if (response.success) {
+        addToast({
+          type: 'info',
+          title: 'Simulación detenida',
+          message: 'La simulación de agentes ha sido pausada'
+        });
+        setIsRunning(false);
+        // Actualizar estado después de detener
+        setTimeout(fetchSimulationStatus, 1000);
+      }
     } catch (error) {
       addToast({
         type: 'error',

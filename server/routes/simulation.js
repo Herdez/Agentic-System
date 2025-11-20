@@ -37,17 +37,25 @@ router.get('/status', async (req, res) => {
 router.post('/start', (req, res) => {
   try {
     const demoMode = isDemoMode();
+    let result;
     
     if (demoMode) {
-      DemoSimulationService.startSimulation();
+      result = DemoSimulationService.startSimulation();
     } else {
-      SimulationService.startSimulation();
+      result = SimulationService.startSimulation();
     }
     
-    res.json({
-      success: true,
-      message: `Simulación ${demoMode ? 'demo' : ''} iniciada exitosamente`
-    });
+    if (result) {
+      res.json({
+        success: true,
+        message: `Simulación ${demoMode ? 'demo' : ''} iniciada exitosamente`
+      });
+    } else {
+      res.json({
+        success: true,
+        message: `Simulación ${demoMode ? 'demo' : ''} ya está en ejecución`
+      });
+    }
   } catch (error) {
     console.error('Error iniciando simulación:', error);
     res.status(500).json({
@@ -61,17 +69,25 @@ router.post('/start', (req, res) => {
 router.post('/stop', (req, res) => {
   try {
     const demoMode = isDemoMode();
+    let result;
     
     if (demoMode) {
-      DemoSimulationService.stopSimulation();
+      result = DemoSimulationService.stopSimulation();
     } else {
-      SimulationService.stopSimulation();
+      result = SimulationService.stopSimulation();
     }
     
-    res.json({
-      success: true,
-      message: `Simulación ${demoMode ? 'demo' : ''} detenida exitosamente`
-    });
+    if (result) {
+      res.json({
+        success: true,
+        message: `Simulación ${demoMode ? 'demo' : ''} detenida exitosamente`
+      });
+    } else {
+      res.json({
+        success: true,
+        message: `Simulación ${demoMode ? 'demo' : ''} ya está detenida`
+      });
+    }
   } catch (error) {
     console.error('Error deteniendo simulación:', error);
     res.status(500).json({
