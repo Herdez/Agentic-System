@@ -47,8 +47,8 @@ const Dashboard: React.FC = () => {
         const agentsData = agentsResponse.success ? agentsResponse.data : (agentsResponse.data || agentsResponse);
         if (agentsData) {
           console.log('🤖 Dashboard: Agentes cargados:', agentsData.length);
-          // Debug de los primeros agentes
-          agentsData.slice(0, 3).forEach((agent: any, index: number) => {
+          // Debug de TODOS los agentes (no solo 3)
+          agentsData.forEach((agent: any, index: number) => {
             console.log(`🔍 Agente ${index + 1}:`, {
               _id: agent._id,
               id: agent.id,
@@ -58,6 +58,9 @@ const Dashboard: React.FC = () => {
               fullAgent: agent
             });
           });
+          
+          // Resumen de todos los agentes para búsqueda
+          console.log('📋 RESUMEN: IDs disponibles:', agentsData.map(a => a._id || a.id));
           setPolledAgents(agentsData);
         } else {
           console.log('❌ Dashboard: No hay datos de agentes en la respuesta');
