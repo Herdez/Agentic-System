@@ -60,7 +60,7 @@ const Dashboard: React.FC = () => {
           });
           
           // Resumen de todos los agentes para búsqueda
-          console.log('📋 RESUMEN: IDs disponibles:', agentsData.map(a => a._id || a.id));
+          console.log('📋 RESUMEN: IDs disponibles:', agentsData.map((a: any) => a._id || a.id));
           setPolledAgents(agentsData);
         } else {
           console.log('❌ Dashboard: No hay datos de agentes en la respuesta');
