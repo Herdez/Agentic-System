@@ -52,6 +52,20 @@ const Dashboard: React.FC = () => {
       if (isNetlify && alertsResponse) {
         const alertsData = alertsResponse.success ? alertsResponse.data : (alertsResponse.data || alertsResponse);
         if (alertsData) {
+          console.log('🚨 Dashboard: Alertas cargadas:', alertsData.length);
+          // Debug de las primeras alertas
+          alertsData.slice(0, 3).forEach((alert: any, index: number) => {
+            console.log(`🔍 Alerta ${index + 1}:`, {
+              name: alert.name,
+              title: alert.title,
+              message: alert.message,
+              agentId: alert.agentId,
+              agent_id: alert.agent_id,
+              source: alert.source,
+              source_ip: alert.source_ip,
+              fullAlert: alert
+            });
+          });
           setPolledAlerts(alertsData);
         }
       }
@@ -225,7 +239,7 @@ const Dashboard: React.FC = () => {
             
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {alerts.slice(0, 8).map((alert, index) => (
-                <AlertItem key={alert._id || index} alert={alert} />
+                <AlertItem key={alert._id || index} alert={alert} agents={agents} />
               ))}
             </div>
           </div>
@@ -395,7 +409,16 @@ const AgentCard: React.FC<{ agent: Agent }> = ({ agent }) => {
 };
 
 // Componente para mostrar una alerta
-const AlertItem: React.FC<{ alert: Alert }> = ({ alert }) => {
+const AlertItem: React.FC<{ alert: Alert; agents: Agent[] }> = ({ alert, agents }) => {
+  // Debug logging para verificar datos
+  console.log('🔍 AlertItem renderizando:', {
+    alertName: alert.name,
+    alertTitle: alert.title,
+    alertMessage: alert.message,
+    agentId: alert.agentId,
+    agent_id: (alert as any).agent_id,
+    availableAgents: agents.length
+  });
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
@@ -422,9 +445,16 @@ const AlertItem: React.FC<{ alert: Alert }> = ({ alert }) => {
   };
 
   // Obtener el nombre específico de la amenaza usando los datos correctos
-  const threatName = alert.message || alert.title || alert.threat_type || 'Security Alert';
-  const agentName = alert.agentType ? alert.agentType.replace('_', ' ').toUpperCase() : 'SYSTEM';
-  const sourceIP = alert.details?.sourceIP || 'Unknown';
+  const threatName = alert.name || alert.message || alert.title || alert.threat_type || 'Security Alert';
+  
+  // Buscar el nombre del agente usando agentId (tipo definido) o agent_id (Netlify)
+  const agentInfo = agents.find(agent => 
+    agent._id === alert.agentId || 
+    agent._id === (alert as any).agent_id ||
+    agent.type === (alert as any).agent_id
+  );
+  const agentName = agentInfo?.name || alert.agentType?.replace('_', ' ').toUpperCase() || 'SISTEMA';
+  const sourceIP = alert.source_ip || alert.details?.sourceIP || alert.source || 'Unknown';
 
   return (
     <div className={`p-3 rounded-lg border ${getSeverityColor(alert.severity || 'low')}`}>
