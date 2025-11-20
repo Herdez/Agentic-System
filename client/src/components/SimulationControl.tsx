@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import { useToast } from '../contexts/ToastContext';
 import { simulationService } from '../services/api';
 
 interface SimulationStats {
@@ -15,9 +14,7 @@ interface SimulationStats {
 const SimulationControl = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [stats, setStats] = useState<SimulationStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const { socket, agents, alerts } = useSocket();
-  const { addToast } = useToast();
 
   // Calcular estadísticas en tiempo real desde los datos del socket
   const calculateRealTimeStats = useCallback(() => {
@@ -152,7 +149,7 @@ const SimulationControl = () => {
       
       return () => clearInterval(interval);
     }
-  }, [socket, fetchSimulationStatus]); // Incluir fetchSimulationStatus como dependencia
+  }, [socket, fetchSimulationStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Actualizar estadísticas cuando cambien los agentes o alertas
   useEffect(() => {
