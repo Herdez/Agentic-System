@@ -471,71 +471,74 @@ const ThreatDetailModal: React.FC<ThreatDetailModalProps> = ({ threat, onClose }
       onClick={onClose} // Cerrar al hacer clic en el fondo
     >
       <div 
-        className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl"
+        className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-hidden shadow-xl mx-4"
         onClick={(e) => e.stopPropagation()} // Evitar cerrar al hacer clic dentro del modal
       >
-        <div className="p-4 sm:p-6">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center space-x-3 flex-1 pr-4">
-              <Target className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 flex-shrink-0" />
+        {/* Header fijo */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 min-w-0 flex-1">
+              <Target className="w-5 h-5 text-red-600 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">{threat.name}</h2>
-                <p className="text-gray-600 capitalize text-sm sm:text-base">{threat.type}</p>
+                <h2 className="text-lg font-semibold text-gray-900 truncate">{threat.name}</h2>
+                <p className="text-gray-600 capitalize text-sm">{threat.type}</p>
               </div>
             </div>
             
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              className="ml-4 p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               title="Cerrar"
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
+        </div>
 
+        {/* Contenido con scroll */}
+        <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-4 sm:p-6">
           {/* Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className={`p-4 rounded-lg border ${getSeverityColor(threat.severity)}`}>
+            <div className={`p-3 rounded-lg border ${getSeverityColor(threat.severity)}`}>
               <div className="text-center">
-                <div className="text-2xl font-bold">{threat.severity.toUpperCase()}</div>
-                <div className="text-sm">Severidad</div>
+                <div className="text-xl font-bold">{threat.severity.toUpperCase()}</div>
+                <div className="text-xs">Severidad</div>
               </div>
             </div>
 
-            <div className={`p-4 rounded-lg border ${getConfidenceColor(threat.confidence)}`}>
+            <div className={`p-3 rounded-lg border ${getConfidenceColor(threat.confidence)}`}>
               <div className="text-center">
-                <div className="text-2xl font-bold">{threat.confidence}%</div>
-                <div className="text-sm">Confianza</div>
+                <div className="text-xl font-bold">{threat.confidence}%</div>
+                <div className="text-xs">Confianza</div>
               </div>
             </div>
 
-            <div className="p-4 rounded-lg border bg-gray-100 text-gray-800 border-gray-200">
+            <div className="p-3 rounded-lg border bg-gray-100 text-gray-800 border-gray-200">
               <div className="text-center">
-                <div className="text-2xl font-bold">{threat.indicators.length}</div>
-                <div className="text-sm">Indicadores</div>
+                <div className="text-xl font-bold">{threat.indicators.length}</div>
+                <div className="text-xs">Indicadores</div>
               </div>
             </div>
           </div>
 
           {/* Content */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Description */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Descripción</h3>
-              <p className="text-gray-700">{threat.description}</p>
+              <h3 className="text-md font-semibold text-gray-900 mb-2">Descripción</h3>
+              <p className="text-gray-700 text-sm">{threat.description}</p>
             </div>
 
             {/* Indicators */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-md font-semibold text-gray-900 mb-2">
                 Indicadores de Compromiso ({threat.indicators.length})
               </h3>
               <div className="grid grid-cols-1 gap-2">
                 {threat.indicators.map((indicator, index) => (
                   <div 
                     key={index}
-                    className="p-3 bg-gray-50 rounded-lg font-mono text-sm break-all"
+                    className="p-2 bg-gray-50 rounded text-xs font-mono break-all"
                   >
                     {indicator}
                   </div>
@@ -544,15 +547,15 @@ const ThreatDetailModal: React.FC<ThreatDetailModalProps> = ({ threat, onClose }
             </div>
 
             {/* Metadata */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-4">
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Fuente</h4>
-                <p className="text-gray-700">{threat.source}</p>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">Fuente</h4>
+                <p className="text-gray-700 text-sm">{threat.source}</p>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2">Última observación</h4>
-                <p className="text-gray-700">{new Date(threat.lastSeen).toLocaleString('es-ES')}</p>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">Última observación</h4>
+                <p className="text-gray-700 text-sm">{new Date(threat.lastSeen).toLocaleString('es-ES')}</p>
               </div>
             </div>
           </div>
