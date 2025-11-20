@@ -1,7 +1,20 @@
-// Variable global para mantener el estado de la simulación en memoria
-// En Netlify Functions, inicia pausado por defecto para mejor control
+// Variables globales para estado de simulación
+// En Netlify Functions, usar localStorage-like approach con timestamps
 let simulationRunning = false;
 let pausedSince = Date.now();
+let simulationStartTime = null;
+let lastStateChange = Date.now();
+
+// Función para determinar estado basado en tiempo (para persistencia en serverless)
+function determineSimulationState() {
+  const now = Date.now();
+  // Si no hay cambio de estado reciente y han pasado más de 5 minutos, asumir pausado
+  if (now - lastStateChange > 300000 && !simulationStartTime) {
+    simulationRunning = false;
+    pausedSince = now;
+  }
+  return simulationRunning;
+}
 
 // Simulación stateless para Netlify Functions
 class NetlifySimulationService {
@@ -30,8 +43,10 @@ class NetlifySimulationService {
 
   // Generar agentes con datos dinámicos basados en timestamp
   getAgents() {
+    const currentlyRunning = determineSimulationState();
+    
     // Si la simulación está pausada, retornar agentes en estado pausado
-    if (!simulationRunning) {
+    if (!currentlyRunning) {
       return this.getPausedAgents();
     }
 
@@ -55,17 +70,19 @@ class NetlifySimulationService {
       
       const lastActivity = new Date(now - (Math.abs(Math.sin(seed)) * 300000)); // Últimos 5 minutos
 
-      // Estados dinámicos de agentes - preferir "active" al inicio
-      const statusOptions = ['active', 'investigating', 'responding', 'scanning', 'monitoring', 'inactive', 'maintenance'];
+      // Estados dinámicos de agentes - mantener alta actividad cuando está corriendo
+      const statusOptions = ['active', 'investigating', 'responding', 'scanning', 'monitoring'];
+      const inactiveOptions = ['inactive', 'maintenance'];
       const statusIndex = Math.abs(Math.floor(Math.sin(seed * 1.1) * statusOptions.length));
-      // Hacer que al menos 5 de 7 agentes estén activos al inicio, luego rotar después de 1 minuto
+      
+      // Cuando la simulación está corriendo, mantener alta actividad (80% activos)
+      const randomValue = Math.sin(seed * 1.3);
       let currentStatus;
-      if (index < 5 && secondsSeed < 12) {
-        currentStatus = 'active'; // Primeros 5 activos por 1 minuto
-      } else if (index < 6) {
-        currentStatus = statusOptions[statusIndex % 5]; // Solo estados activos para el 6to agente
-      } else {
-        currentStatus = statusOptions[statusIndex]; // El 7mo puede estar inactivo o en mantenimiento
+      
+      if (randomValue > 0.2) { // 80% probabilidad de estar activo
+        currentStatus = statusOptions[statusIndex % statusOptions.length];
+      } else { // 20% probabilidad de estar en mantenimiento/inactivo ocasionalmente
+        currentStatus = inactiveOptions[Math.abs(Math.floor(Math.sin(seed * 1.5) * inactiveOptions.length))];
       }
       
       // Actividades dinámicas más específicas según estado
@@ -227,8 +244,10 @@ class NetlifySimulationService {
 
   // Generar alertas dinámicas
   getAlerts() {
+    const currentlyRunning = determineSimulationState();
+    
     // Si la simulación está pausada, retornar alertas estáticas
-    if (!simulationRunning) {
+    if (!currentlyRunning) {
       return this.getPausedAlerts();
     }
 
@@ -339,16 +358,18 @@ class NetlifySimulationService {
   // Simular estado de simulación
   getSimulationStatus() {
     const now = Date.now();
+    const currentlyRunning = determineSimulationState();
     
     return {
-      isRunning: simulationRunning,
+      isRunning: currentlyRunning,
       agentsCount: 7,
       alertsCount: this.getAlerts().length,
-      uptime: Math.floor((now % (24 * 3600000)) / 1000), // Segundos del día
-      startTime: new Date(now - (now % (24 * 3600000))).toISOString(), // Inicio del día
+      uptime: simulationStartTime ? Math.floor((now - simulationStartTime) / 1000) : 0,
+      startTime: simulationStartTime ? new Date(simulationStartTime).toISOString() : null,
       lastUpdate: new Date().toISOString(),
       mode: 'netlify-stateless',
-      pausedSince: pausedSince
+      pausedSince: pausedSince ? new Date(pausedSince).toISOString() : null,
+      stateChangeTime: new Date(lastStateChange).toISOString()
     };
   }
 
@@ -437,41 +458,73 @@ class NetlifySimulationService {
   initializeAgents() {
     simulationRunning = true;
     pausedSince = null;
-    return { message: 'Agentes inicializados en modo Netlify', count: 7 };
+    simulationStartTime = Date.now();
+    lastStateChange = Date.now();
+    
+    console.log('🤖 Agentes inicializados en Netlify - Simulación iniciada');
+    
+    return { 
+      message: 'Agentes inicializados en modo Netlify - Simulación iniciada', 
+      count: 7,
+      isRunning: true,
+      timestamp: new Date().toISOString()
+    };
   }
 
   startSimulation() {
     simulationRunning = true;
     pausedSince = null;
+    simulationStartTime = Date.now();
+    lastStateChange = Date.now();
+    
+    console.log('🚀 Simulación iniciada en Netlify:', { 
+      timestamp: new Date().toISOString(),
+      isRunning: true 
+    });
+    
     return { 
       message: 'Simulación iniciada en modo stateless', 
       timestamp: new Date().toISOString(),
-      isRunning: true
+      isRunning: true,
+      simulationStartTime: simulationStartTime
     };
   }
 
   stopSimulation() {
     simulationRunning = false;
-    pausedSince = new Date().toISOString();
+    pausedSince = Date.now();
+    simulationStartTime = null;
+    lastStateChange = Date.now();
+    
+    console.log('⏸️ Simulación pausada en Netlify:', { 
+      timestamp: new Date().toISOString(),
+      isRunning: false 
+    });
+    
     return { 
       message: 'Simulación pausada en modo stateless', 
       timestamp: new Date().toISOString(),
-      isRunning: false
+      isRunning: false,
+      pausedSince: pausedSince
     };
   }
 
   restartSimulation() {
     simulationRunning = true;
     pausedSince = null;
+    simulationStartTime = Date.now();
+    lastStateChange = Date.now();
+    
     return { 
       message: 'Simulación reiniciada en modo stateless', 
       timestamp: new Date().toISOString(),
-      isRunning: true
+      isRunning: true,
+      simulationStartTime: simulationStartTime
     };
   }
 
   isSimulationRunning() {
-    return simulationRunning;
+    return determineSimulationState();
   }
 
   getUptime() {
