@@ -21,10 +21,25 @@ const Navbar: React.FC = () => {
   
   // Usar alertas de WebSocket si está conectado, sino usar polling
   const alerts = isConnected ? socketAlerts : polledAlerts;
-  const criticalAlerts = alerts.filter(alert => alert.severity === 'critical' || alert.severity === 'high').length;
+  
+  // Filtrado profesional: solo alertas críticas/altas SIN RESOLVER
+  const criticalAlerts = alerts.filter(alert => 
+    (alert.severity === 'critical' || alert.severity === 'high') && 
+    alert.status !== 'resolved' && 
+    alert.status !== 'closed' &&
+    alert.status !== 'false_positive'
+  ).length;
   
   // Debug para verificar alertas críticas
-  console.log('🔔 Navbar: Total alertas:', alerts.length, 'Críticas:', criticalAlerts);
+  console.log('🔔 Navbar: Total alertas:', alerts.length, 'Pendientes críticas/altas:', criticalAlerts);
+
+  // Función para determinar color según urgencia
+  const getUrgencyColor = (count: number) => {
+    if (count >= 5) return 'bg-red-500 animate-pulse'; // Crítico
+    if (count >= 2) return 'bg-orange-500'; // Atención
+    if (count === 1) return 'bg-yellow-500'; // Bajo
+    return 'bg-gray-400'; // Sin alertas
+  };
   
   // Polling de alertas para modo Netlify
   useEffect(() => {
@@ -139,7 +154,7 @@ const Navbar: React.FC = () => {
               >
                 <Bell className="h-5 w-5" />
                 {criticalAlerts > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className={`absolute -top-1 -right-1 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium ${getUrgencyColor(criticalAlerts)}`}>
                     {criticalAlerts}
                   </span>
                 )}
@@ -150,8 +165,11 @@ const Navbar: React.FC = () => {
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
                   <div className="p-4 border-b border-gray-200">
                     <h3 className="text-sm font-semibold text-gray-900">
-                      Alertas Recientes ({alerts.length})
+                      Alertas Críticas sin Resolver ({criticalAlerts})
                     </h3>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Solo alertas críticas y alta prioridad pendientes
+                    </p>
                   </div>
                   
                   {alerts.length === 0 ? (
