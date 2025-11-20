@@ -140,6 +140,12 @@ class NetlifySimulationService {
         currentStatus = inactiveOptions[Math.abs(Math.floor(Math.sin(seed * 1.5) * inactiveOptions.length))];
       }
       
+      // Validación de seguridad: asegurar que currentStatus nunca sea undefined
+      if (!currentStatus || typeof currentStatus !== 'string') {
+        currentStatus = 'active'; // Fallback por defecto
+        console.log(`⚠️ Status undefined para agente ${agent.id}, usando 'active' como fallback`);
+      }
+      
       // Actividades dinámicas más específicas según estado
       const activitiesByStatus = {
         'active': [
@@ -201,6 +207,9 @@ class NetlifySimulationService {
         id: agent.id,
         name: agent.name,
         status: currentStatus,
+        statusIndex: statusIndex,
+        randomValue: randomValue,
+        seed: seed,
         hasDescription: !!agent.description,
         hasCapabilities: !!agent.capabilities
       });
