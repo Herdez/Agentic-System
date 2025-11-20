@@ -12,6 +12,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [polledAlerts, setPolledAlerts] = useState<Alert[]>([]);
   
   // Detectar si estamos en modo Netlify
@@ -19,7 +20,10 @@ const Navbar: React.FC = () => {
   
   // Usar alertas de WebSocket si está conectado, sino usar polling
   const alerts = isConnected ? socketAlerts : polledAlerts;
-  const criticalAlerts = alerts.filter(alert => alert.severity === 'critical').length;
+  const criticalAlerts = alerts.filter(alert => alert.severity === 'critical' || alert.severity === 'high').length;
+  
+  // Debug para verificar alertas críticas
+  console.log('🔔 Navbar: Total alertas:', alerts.length, 'Críticas:', criticalAlerts);
   
   // Polling de alertas para modo Netlify
   useEffect(() => {
@@ -42,6 +46,24 @@ const Navbar: React.FC = () => {
     
     return () => clearInterval(interval);
   }, [isNetlify, isConnected]);
+
+  // Cerrar menú de usuario al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-menu')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: '📊' },
@@ -114,8 +136,11 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* Usuario */}
-            <div className="relative group">
-              <button className="flex items-center space-x-2 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+            <div className="relative user-menu">
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
                 <User className="h-5 w-5" />
                 <span className="hidden sm:block text-sm font-medium">
                   {authState.user?.username || 'Usuario'}
@@ -123,21 +148,29 @@ const Navbar: React.FC = () => {
               </button>
               
               {/* Dropdown menu */}
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-1">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                    <p className="font-medium">{authState.user?.username}</p>
-                    <p className="text-xs text-gray-500">{authState.user?.email}</p>
+              {isUserMenuOpen && (
+                <div 
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+                  onMouseLeave={() => setIsUserMenuOpen(false)}
+                >
+                  <div className="py-1">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                      <p className="font-medium">{authState.user?.username}</p>
+                      <p className="text-xs text-gray-500">{authState.user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Cerrar sesión</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Cerrar sesión</span>
-                  </button>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Menú móvil toggle */}

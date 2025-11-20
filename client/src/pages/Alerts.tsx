@@ -458,12 +458,15 @@ const AlertCard: React.FC<AlertCardProps> = ({ alert, onUpdate, onClick }) => {
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
               <span>
-                {new Date(alert.createdAt).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {(() => {
+                  const date = new Date(alert.createdAt || alert.timestamp || (alert as any).detection_time);
+                  return !isNaN(date.getTime()) ? date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }) : '--/--';
+                })()}
               </span>
             </div>
           </div>
