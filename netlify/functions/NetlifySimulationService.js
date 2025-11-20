@@ -80,6 +80,9 @@ class NetlifySimulationService {
       }
     ];
 
+    // Log para verificar que los agentes se inicializaron correctamente
+    console.log('🔧 NetlifySimulationService: Agentes inicializados:', this.agentTypes.map(a => ({ id: a.id, name: a.name, hasDescription: !!a.description })));
+
     this.threatTypes = [
       'DDoS Attack', 'SQL Injection', 'Cross-Site Scripting', 'Brute Force',
       'Malware Detection', 'Phishing Attempt', 'Ransomware', 'Data Breach',
@@ -187,6 +190,15 @@ class NetlifySimulationService {
       
       const activities = activitiesByStatus[currentStatus] || activitiesByStatus['active'];
       const currentActivity = activities[Math.abs(Math.floor(Math.sin(seed * 1.3) * activities.length))];
+
+      // Log de depuración para verificar datos del agente
+      console.log(`🔧 Generando agente ${index}:`, {
+        id: agent.id,
+        name: agent.name,
+        status: currentStatus,
+        hasDescription: !!agent.description,
+        hasCapabilities: !!agent.capabilities
+      });
 
       return {
         id: agent.id,
@@ -344,6 +356,15 @@ class NetlifySimulationService {
       ];
 
       const description = descriptions[Math.abs(Math.floor(Math.sin(seed * 1.5) * descriptions.length)) % descriptions.length];
+
+      // Log de depuración para verificar datos de alerta
+      console.log(`🚨 Generando alerta ${i}:`, {
+        threatType: threatInfo.type,
+        threatName: threatInfo.name,
+        description: description.substring(0, 50) + '...',
+        agentId: agent.id,
+        agentName: agent.name
+      });
 
       alerts.push({
         id: `alert-${secondsSeed}-${i + 1}`,
