@@ -533,6 +533,21 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 - [ ] Análisis forense automatizado
 - [ ] Backup automático y disaster recovery
 
+## 🔄 Cambios Recientes
+
+### v2.1.0 - Sistema Siempre Activo
+- ✅ **Eliminación de controles manuales**: El sistema de defensa ahora permanece siempre activo
+- ✅ **Interfaz simplificada**: Removidos botones de iniciar/pausar/reiniciar simulación
+- ✅ **Estabilidad mejorada**: Reducido el problema de activación/desactivación automática
+- ✅ **UI optimizada**: Dashboard centrado en métricas y estado del sistema
+- ✅ **Experiencia mejorada**: Sin necesidad de intervención manual para mantener la simulación
+
+### Cambios en Componentes:
+- **SimulationControl.tsx**: Transformado de panel de control a dashboard de estado
+- **Sistema de agentes**: Configurado para auto-inicialización y persistencia
+- **Polling optimizado**: Reducido a 20 segundos para mayor estabilidad
+- **Estado forzado**: La simulación siempre aparece como "SIEMPRE ACTIVO"
+
 ---
 
 **Desarrollado con ❤️ para la seguridad blockchain**

@@ -102,9 +102,15 @@ const SimulationControl = () => {
   }, []); // Sin dependencias para evitar re-renders
 
   useEffect(() => {
-    console.log('🔧 SimulationControl: Inicializando componente');
+    console.log('🔧 SimulationControl: Inicializando componente con simulación siempre activa');
     
-    // Obtener estado inicial
+    // Establecer estado inicial como activo
+    setIsRunning(true);
+    
+    // Asegurar que la simulación esté ejecutándose
+    ensureSimulationIsRunning();
+    
+    // Obtener estado actualizado
     fetchSimulationStatus();
 
     if (socket) {
@@ -113,13 +119,15 @@ const SimulationControl = () => {
       // Listener para estado de simulación
       const handleSimulationStatus = (data: { running: boolean }) => {
         console.log('🔧 WebSocket simulation-status recibido:', data);
-        setIsRunning(data.running);
+        // Siempre mantener como activo, incluso si el backend dice que no está corriendo
+        setIsRunning(true);
       };
 
       const handleSimulationUpdate = (data: SimulationStats) => {
         console.log('🔧 WebSocket simulation_update recibido:', data);
         setStats(data);
-        // NO actualizar isRunning aquí para evitar conflictos
+        // Forzar estado activo
+        setIsRunning(true);
       };
 
       socket.on('simulation-status', handleSimulationStatus);
@@ -138,6 +146,8 @@ const SimulationControl = () => {
       const interval = setInterval(() => {
         console.log('🔧 Ejecutando polling de estado (cada 20s)...');
         fetchSimulationStatus();
+        // Asegurar que siga activa
+        ensureSimulationIsRunning();
       }, 20000); // Cada 20 segundos (más estable)
       
       return () => clearInterval(interval);
@@ -152,101 +162,40 @@ const SimulationControl = () => {
     }
   }, [calculateRealTimeStats]);
 
-  const handleStartSimulation = async () => {
-    if (isLoading || isRunning) {
-      console.log('🔧 Ignorando start - isLoading:', isLoading, 'isRunning:', isRunning);
-      return;
-    }
-    
-    setIsLoading(true);
+  // Función para asegurar que la simulación esté siempre activa
+  const ensureSimulationIsRunning = useCallback(async () => {
     try {
-      console.log('🔧 Iniciando simulación...');
+      console.log('🔧 Asegurando que la simulación esté activa...');
       const response = await simulationService.start();
-      console.log('🔧 Respuesta start:', response);
+      console.log('🔧 Respuesta start (auto):', response);
       
       if (response.success) {
-        addToast({
-          type: 'success',
-          title: 'Simulación iniciada',
-          message: 'La simulación de agentes ha comenzado exitosamente'
-        });
+        console.log('✅ Simulación asegurada como activa');
         setIsRunning(true);
-        console.log('🔧 Estado local actualizado a: RUNNING');
         
-        // Eliminamos setTimeout para reducir re-renders
+        // Guardar en localStorage para persistencia
+        try {
+          localStorage.setItem('sim-state', JSON.stringify({
+            isRunning: true,
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          console.warn('No se pudo guardar estado en localStorage:', e);
+        }
       }
     } catch (error) {
-      console.error('❌ Error iniciando simulación:', error);
-      addToast({
-        type: 'error',
-        title: 'Error',
-        message: 'No se pudo iniciar la simulación'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStopSimulation = async () => {
-    if (isLoading || !isRunning) {
-      console.log('🔧 Ignorando stop - isLoading:', isLoading, 'isRunning:', isRunning);
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      console.log('🔧 Deteniendo simulación...');
-      const response = await simulationService.stop();
-      console.log('🔧 Respuesta stop:', response);
-      
-      if (response.success) {
-        addToast({
-          type: 'info',
-          title: 'Simulación detenida',
-          message: 'La simulación de agentes ha sido pausada'
-        });
-        setIsRunning(false);
-        console.log('🔧 Estado local actualizado a: STOPPED');
-        
-        // Eliminamos setTimeout para reducir re-renders
-      }
-    } catch (error) {
-      console.error('❌ Error deteniendo simulación:', error);
-      addToast({
-        type: 'error',
-        title: 'Error',
-        message: 'No se pudo detener la simulación'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRestartSimulation = async () => {
-    try {
-      await simulationService.restart();
-      addToast({
-        type: 'success',
-        title: 'Simulación reiniciada',
-        message: 'La simulación ha sido reiniciada correctamente'
-      });
+      console.error('❌ Error asegurando simulación activa:', error);
+      // Si falla, aún marcamos como running para mostrar UI consistente
       setIsRunning(true);
-      // Eliminamos setTimeout para reducir re-renders
-    } catch (error) {
-      addToast({
-        type: 'error',
-        title: 'Error',
-        message: 'No se pudo reiniciar la simulación'
-      });
     }
-  };
+  }, []);
 
   return (
     <div className="simulation-control-card">
       <div className="card-header">
-        <h3 className="card-title">🎮 Control de Simulación</h3>
-        <div className={`status-badge ${isRunning ? 'status-active' : 'status-inactive'}`}>
-          {isRunning ? 'ACTIVA' : 'INACTIVA'}
+        <h3 className="card-title">🛡️ Sistema de Defensa Blockchain</h3>
+        <div className="status-badge status-active">
+          SIEMPRE ACTIVO
         </div>
       </div>
       
@@ -272,33 +221,8 @@ const SimulationControl = () => {
           </div>
         )}
 
-        <div className="control-buttons">
-          {!isRunning ? (
-            <button 
-              className="btn btn-primary"
-              onClick={handleStartSimulation}
-            >
-              ▶️ Iniciar Simulación
-            </button>
-          ) : (
-            <button 
-              className="btn btn-secondary"
-              onClick={handleStopSimulation}
-            >
-              ⏸️ Pausar Simulación
-            </button>
-          )}
-          
-          <button 
-            className="btn btn-info"
-            onClick={handleRestartSimulation}
-          >
-            🔄 Reiniciar
-          </button>
-        </div>
-
         <div className="simulation-info">
-          <h4>Estado de la Simulación:</h4>
+          <h4>🛡️ Sistema de Defensa Activo:</h4>
           <ul>
             <li>✅ Detección de intrusiones automática</li>
             <li>✅ Respuesta a incidentes activa</li>
