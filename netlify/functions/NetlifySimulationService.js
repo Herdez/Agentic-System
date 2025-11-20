@@ -397,6 +397,8 @@ class NetlifySimulationService {
         status,
         source,
         timestamp: alertTime.toISOString(),
+        createdAt: alertTime.toISOString(),
+        detection_time: alertTime.toISOString(),
         agent_id: agent.id,
         threat_type: threatInfo.type,
         threat_icon: threatInfo.icon,
@@ -406,17 +408,82 @@ class NetlifySimulationService {
         mitigation_status: status === 'resolved' ? 'completed' : 'in_progress',
         source_ip: this.getRandomIP(seed),
         attempts_blocked: Math.floor(Math.sin(seed * 1.7) * 100 + 1),
-        detection_time: new Date(now - (Math.abs(Math.sin(seed * 1.8)) * 300000)).toISOString() // Tiempo de detección
+        category: this.getCategoryFromType(threatInfo.type),
+        indicators: [`Suspicious activity on ${source}`, `Multiple failed attempts`, `Anomalous traffic patterns`],
+        mitigation_steps: this.getMitigationSteps(threatInfo.type)
       });
     }
     
-    // Log final de alertas generadas
-    console.log('🚨 TOTAL Alertas generadas:', alerts.length);
-    alerts.slice(0, 3).forEach((alert, index) => {
-      console.log(`✅ Alerta ${index}: ${alert.title} - ${alert.name} (desc: ${alert.description.substring(0, 50)}...)`);
-    });
+    // Log estadísticas de alertas para debugging
+    const stats = {
+      total: alerts.length,
+      critical: alerts.filter(a => a.severity === 'critical').length,
+      high: alerts.filter(a => a.severity === 'high').length,
+      active: alerts.filter(a => ['active', 'investigating', 'mitigating'].includes(a.status)).length,
+      recent: alerts.filter(a => {
+        const alertDate = new Date(a.timestamp);
+        const last24Hours = new Date(now - 24 * 60 * 60 * 1000);
+        return alertDate >= last24Hours;
+      }).length
+    };
+    
+    console.log('🚨 Estadísticas de alertas:', stats);
 
     return alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  }
+
+  // Función auxiliar para generar IP aleatoria
+  getRandomIP(seed) {
+    const base = Math.abs(Math.sin(seed));
+    const oct1 = Math.floor(base * 200 + 1);
+    const oct2 = Math.floor(Math.sin(seed * 1.1) * 256);
+    const oct3 = Math.floor(Math.sin(seed * 1.2) * 256);
+    const oct4 = Math.floor(Math.sin(seed * 1.3) * 256);
+    return `${Math.abs(oct1)}.${Math.abs(oct2)}.${Math.abs(oct3)}.${Math.abs(oct4)}`;
+  }
+
+  // Función para categorizar tipos de amenazas
+  getCategoryFromType(type) {
+    const categories = {
+      'DDoS Attack': 'network',
+      'Malware Detection': 'malware',
+      'SQL Injection': 'web_attack',
+      'Phishing Campaign': 'social_engineering',
+      'Brute Force Attack': 'authentication',
+      'Crypto Mining': 'resource_abuse',
+      'Data Exfiltration': 'data_loss',
+      'Ransomware': 'malware',
+      'Zero-Day Exploit': 'vulnerability_exploit',
+      'Network Intrusion': 'network',
+      'DNS Poisoning': 'network',
+      'XSS Attack': 'web_attack',
+      'MITM Attack': 'network',
+      'Privilege Escalation': 'system_compromise',
+      'API Abuse': 'abuse'
+    };
+    return categories[type] || 'other';
+  }
+
+  // Función para obtener pasos de mitigación
+  getMitigationSteps(type) {
+    const steps = {
+      'DDoS Attack': ['Enable DDoS protection', 'Rate limit incoming requests', 'Scale infrastructure'],
+      'Malware Detection': ['Isolate affected systems', 'Run full system scan', 'Update antivirus'],
+      'SQL Injection': ['Validate input parameters', 'Use parameterized queries', 'Enable WAF'],
+      'Phishing Campaign': ['Block malicious domains', 'User training', 'Email filtering'],
+      'Brute Force Attack': ['Block suspicious IPs', 'Enable account lockout', 'Implement CAPTCHA'],
+      'Crypto Mining': ['Terminate mining processes', 'Remove malicious software', 'Monitor resources'],
+      'Data Exfiltration': ['Block suspicious traffic', 'Review access logs', 'DLP controls'],
+      'Ransomware': ['Isolate systems', 'Restore from backups', 'Patch vulnerabilities'],
+      'Zero-Day Exploit': ['Apply security patches', 'Implement mitigations', 'Monitor closely'],
+      'Network Intrusion': ['Block unauthorized access', 'Forensic analysis', 'Strengthen perimeter'],
+      'DNS Poisoning': ['Flush DNS cache', 'Use secure DNS', 'Monitor DNS traffic'],
+      'XSS Attack': ['Sanitize inputs', 'Content Security Policy', 'Input validation'],
+      'MITM Attack': ['Use encrypted connections', 'Certificate pinning', 'Network segmentation'],
+      'Privilege Escalation': ['Revoke privileges', 'Patch vulnerabilities', 'Review permissions'],
+      'API Abuse': ['Implement rate limiting', 'API authentication', 'Monitor usage patterns']
+    };
+    return steps[type] || ['Investigate incident', 'Apply security measures', 'Monitor'];
   }
 
   // Generar alertas para simulación pausada
