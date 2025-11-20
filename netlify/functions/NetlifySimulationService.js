@@ -28,6 +28,8 @@ function determineSimulationState() {
 // Simulación stateless para Netlify Functions
 class NetlifySimulationService {
   constructor() {
+    console.log('🏗️ Inicializando NetlifySimulationService...');
+    
     this.agentTypes = [
       { 
         id: 'monitor', 
@@ -80,6 +82,9 @@ class NetlifySimulationService {
       }
     ];
 
+    // Log para verificar inicialización
+    console.log('✅ Agentes inicializados:', this.agentTypes.map(a => ({ id: a.id, name: a.name, hasDesc: !!a.description })));
+
     // Log para verificar que los agentes se inicializaron correctamente
     console.log('🔧 NetlifySimulationService: Agentes inicializados:', this.agentTypes.map(a => ({ id: a.id, name: a.name, hasDescription: !!a.description })));
 
@@ -103,7 +108,7 @@ class NetlifySimulationService {
     const now = Date.now();
     const secondsSeed = Math.floor(now / 5000); // Cambia cada 5 segundos
     
-    return this.agentTypes.map((agent, index) => {
+    const agentsResult = this.agentTypes.map((agent, index) => {
       // Usar timestamp para generar datos "aleatorios" pero consistentes
       const seed = secondsSeed + index * 1000;
       const activityLevel = Math.sin(seed / 100) * 50 + 50; // 0-100
@@ -245,6 +250,14 @@ class NetlifySimulationService {
         }
       };
     });
+    
+    // Log final de todos los agentes
+    console.log('📋 TOTAL Agentes generados:', agentsResult.length);
+    agentsResult.forEach((agent, index) => {
+      console.log(`✅ Agente ${index}: ${agent.id} - ${agent.name} (desc: ${!!agent.description})`);
+    });
+    
+    return agentsResult;
   }
 
   // Generar agentes en estado pausado
@@ -387,6 +400,12 @@ class NetlifySimulationService {
         detection_time: new Date(now - (Math.abs(Math.sin(seed * 1.8)) * 300000)).toISOString() // Tiempo de detección
       });
     }
+    
+    // Log final de alertas generadas
+    console.log('🚨 TOTAL Alertas generadas:', alerts.length);
+    alerts.slice(0, 3).forEach((alert, index) => {
+      console.log(`✅ Alerta ${index}: ${alert.title} - ${alert.name} (desc: ${alert.description.substring(0, 50)}...)`);
+    });
 
     return alerts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }
