@@ -43,10 +43,27 @@ const Dashboard: React.FC = () => {
       }
       
       if (isNetlify && agentsResponse) {
+        console.log('🤖 Dashboard: Respuesta de agentes:', agentsResponse);
         const agentsData = agentsResponse.success ? agentsResponse.data : (agentsResponse.data || agentsResponse);
         if (agentsData) {
+          console.log('🤖 Dashboard: Agentes cargados:', agentsData.length);
+          // Debug de los primeros agentes
+          agentsData.slice(0, 3).forEach((agent: any, index: number) => {
+            console.log(`🔍 Agente ${index + 1}:`, {
+              _id: agent._id,
+              id: agent.id,
+              name: agent.name,
+              type: agent.type,
+              status: agent.status,
+              fullAgent: agent
+            });
+          });
           setPolledAgents(agentsData);
+        } else {
+          console.log('❌ Dashboard: No hay datos de agentes en la respuesta');
         }
+      } else {
+        console.log('❌ Dashboard: No se cargaron agentes - isNetlify:', isNetlify, 'agentsResponse:', !!agentsResponse);
       }
       
       if (isNetlify && alertsResponse) {
@@ -453,6 +470,16 @@ const AlertItem: React.FC<{ alert: Alert; agents: Agent[] }> = ({ alert, agents 
     agent._id === (alert as any).agent_id ||
     agent.type === (alert as any).agent_id
   );
+  
+  // Debug de la búsqueda del agente
+  if (!agentInfo && agents.length > 0) {
+    console.log(`❌ No se encontró agente para:`, {
+      alertAgentId: (alert as any).agent_id,
+      alertAgentIdType: alert.agentId,
+      availableAgentIds: agents.map(a => ({ _id: a._id, type: a.type, name: a.name }))
+    });
+  }
+  
   const agentName = agentInfo?.name || alert.agentType?.replace('_', ' ').toUpperCase() || 'SISTEMA';
   const sourceIP = alert.source_ip || alert.details?.sourceIP || alert.source || 'Unknown';
 
