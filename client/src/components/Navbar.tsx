@@ -13,6 +13,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [polledAlerts, setPolledAlerts] = useState<Alert[]>([]);
   
   // Detectar si estamos en modo Netlify
@@ -58,16 +59,19 @@ const Navbar: React.FC = () => {
       if (!target.closest('.user-menu')) {
         setIsUserMenuOpen(false);
       }
+      if (!target.closest('.notification-menu')) {
+        setIsNotificationOpen(false);
+      }
     };
 
-    if (isUserMenuOpen) {
+    if (isUserMenuOpen || isNotificationOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isUserMenuOpen]);
+  }, [isUserMenuOpen, isNotificationOpen]);
 
   const navigationItems = [
     { name: 'Dashboard', path: '/', icon: '📊' },
@@ -128,8 +132,11 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* Notificaciones */}
-            <div className="relative">
-              <button className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+            <div className="relative notification-menu">
+              <button 
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
                 <Bell className="h-5 w-5" />
                 {criticalAlerts > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -137,6 +144,64 @@ const Navbar: React.FC = () => {
                   </span>
                 )}
               </button>
+
+              {/* Dropdown de notificaciones */}
+              {isNotificationOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Alertas Recientes ({alerts.length})
+                    </h3>
+                  </div>
+                  
+                  {alerts.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No hay alertas disponibles
+                    </div>
+                  ) : (
+                    <div className="max-h-72 overflow-y-auto">
+                      {alerts.slice(0, 10).map((alert, index) => (
+                        <div 
+                          key={alert._id || index} 
+                          className="p-3 border-b border-gray-100 hover:bg-gray-50 last:border-b-0"
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              alert.severity === 'critical' ? 'bg-red-500' :
+                              alert.severity === 'high' ? 'bg-orange-500' :
+                              alert.severity === 'medium' ? 'bg-yellow-500' :
+                              'bg-blue-500'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {alert.name || alert.message || alert.title || 'Alerta de seguridad'}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">
+                                {alert.severity?.toUpperCase()} • {new Date(
+                                  alert.createdAt || alert.timestamp || (alert as any).detection_time || new Date()
+                                ).toLocaleTimeString('es-ES', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className="p-3 bg-gray-50 text-center">
+                    <Link 
+                      to="/alerts" 
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      onClick={() => setIsNotificationOpen(false)}
+                    >
+                      Ver todas las alertas →
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Usuario */}

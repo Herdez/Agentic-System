@@ -471,7 +471,7 @@ const ThreatDetailModal: React.FC<ThreatDetailModalProps> = ({ threat, onClose }
       onClick={onClose} // Cerrar al hacer clic en el fondo
     >
       <div 
-        className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl"
         onClick={(e) => e.stopPropagation()} // Evitar cerrar al hacer clic dentro del modal
       >
         <div className="p-4 sm:p-6">
