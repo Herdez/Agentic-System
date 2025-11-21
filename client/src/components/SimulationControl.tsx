@@ -37,10 +37,10 @@ const SimulationControl = () => {
       let alertsArray = [];
       
       if (isNetlify) {
-        // Para Netlify, usar las Netlify Functions
-        console.log('🌐 Detectado entorno Netlify, usando Netlify Functions...');
+        // Para Netlify, usar las mismas rutas que Dashboard (sin ?endpoint=)
+        console.log('🌐 Detectado entorno Netlify, usando mismas rutas que Dashboard...');
         
-        const agentsResponse = await fetch('/.netlify/functions/api?endpoint=agents');
+        const agentsResponse = await fetch('/.netlify/functions/api/agents');
         const agentsText = await agentsResponse.text();
         console.log('📡 Respuesta raw de agentes:', agentsText.substring(0, 200));
         
@@ -51,7 +51,7 @@ const SimulationControl = () => {
           console.error('❌ Error parseando agentes:', e);
         }
         
-        const alertsResponse = await fetch('/.netlify/functions/api?endpoint=alerts');
+        const alertsResponse = await fetch('/.netlify/functions/api/alerts');
         const alertsText = await alertsResponse.text();
         console.log('📡 Respuesta raw de alertas:', alertsText.substring(0, 200));
         
