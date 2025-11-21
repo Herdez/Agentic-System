@@ -1,2 +1,2 @@
-// PostCSS configuration - TailwindCSS disabled temporarily for testing
+// PostCSS configuration - TailwindCSS disabled for Netlify compatibility
 module.exports = {}
