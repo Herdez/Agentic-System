@@ -9,21 +9,21 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       showError('Error', 'Por favor completa todos los campos');
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       await login(username, password);
       showSuccess('Éxito', 'Inicio de sesión exitoso');
@@ -41,7 +41,7 @@ const Login: React.FC = () => {
       analyst: { username: 'analyst', password: 'analyst123' },
       operator: { username: 'operator', password: 'operator123' }
     };
-    
+
     setUsername(credentials[role].username);
     setPassword(credentials[role].password);
   };
@@ -54,7 +54,7 @@ const Login: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-xl font-normal text-gray-500 tracking-wide">
-              Log in to your account
+              BlockShield Agents AI
             </h1>
           </div>
 
@@ -136,7 +136,7 @@ const Login: React.FC = () => {
                 Sign Up
               </span>
             </p>
-            
+
             {/* Demo Accounts - Compact */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-400 mb-3">Demo accounts:</p>
