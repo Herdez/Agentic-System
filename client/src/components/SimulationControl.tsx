@@ -26,6 +26,16 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
   const [fallbackAgents, setFallbackAgents] = useState<any[]>([]);
   const [fallbackAlerts, setFallbackAlerts] = useState<any[]>([]);
 
+  // Debug crítico: Ver qué props recibimos de Dashboard
+  console.log('🎯 SimulationControl PROPS recibidas:', {
+    sharedAgentsLength: sharedAgents?.length || 0,
+    sharedAlertsLength: sharedAlerts?.length || 0,
+    hasSharedAgents: !!sharedAgents && sharedAgents.length > 0,
+    hasSharedAlerts: !!sharedAlerts && sharedAlerts.length > 0,
+    sharedAgentsSample: sharedAgents?.slice(0, 2),
+    sharedAlertsSample: sharedAlerts?.slice(0, 2)
+  });
+
   console.log('🔧 SimulationControl montado - Estado inicial:', {
     isConnected,
     hasSocketAgents: !!agents?.length,
@@ -100,20 +110,35 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
     }
   }, []);
 
-  // Calcular estadísticas en tiempo real desde los datos compartidos o socket
+  // Calcular estadísticas en tiempo real - PRIORIDAD ABSOLUTA a datos compartidos
   const calculateRealTimeStats = useCallback(() => {
-    // PRIORIDAD: 1. Datos compartidos de Dashboard, 2. WebSocket, 3. Fallback
-    const dataAgents = (sharedAgents && sharedAgents.length > 0) 
-      ? sharedAgents 
-      : (agents && agents.length > 0) 
-        ? agents 
-        : fallbackAgents;
-        
-    const dataAlerts = (sharedAlerts && sharedAlerts.length > 0) 
-      ? sharedAlerts 
-      : (alerts && alerts.length > 0) 
-        ? alerts 
-        : fallbackAlerts;
+    console.log('🚀 calculateRealTimeStats INICIADO - Verificando fuentes de datos...');
+    
+    // FORZAR uso de datos compartidos si están disponibles
+    let dataAgents: any[] = [];
+    let dataAlerts: any[] = [];
+    
+    if (sharedAgents && sharedAgents.length > 0) {
+      dataAgents = sharedAgents;
+      console.log('✅ Usando SHARED AGENTS:', sharedAgents.length);
+    } else if (agents && agents.length > 0) {
+      dataAgents = agents;
+      console.log('🔶 Usando WebSocket agents:', agents.length);
+    } else {
+      dataAgents = fallbackAgents;
+      console.log('🔸 Usando fallback agents:', fallbackAgents.length);
+    }
+    
+    if (sharedAlerts && sharedAlerts.length > 0) {
+      dataAlerts = sharedAlerts;
+      console.log('✅ Usando SHARED ALERTS:', sharedAlerts.length);
+    } else if (alerts && alerts.length > 0) {
+      dataAlerts = alerts;
+      console.log('🔶 Usando WebSocket alerts:', alerts.length);
+    } else {
+      dataAlerts = fallbackAlerts;
+      console.log('🔸 Usando fallback alerts:', fallbackAlerts.length);
+    }
     
     console.log('🔧 calculateRealTimeStats - Estado de datos:', {
       sharedAgents: sharedAgents?.length || 0,
@@ -238,13 +263,39 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
   // Efecto inicial para cargar datos inmediatamente al montar el componente
   useEffect(() => {
     console.log('🔵 PRIMER EFECTO - Ejecutándose inmediatamente al montar');
-    fetchFallbackData();
-  }, [fetchFallbackData]);
-
-  // Efecto para calcular stats cuando cambien los datos compartidos de Dashboard
-  useEffect(() => {
+    
+    // Si ya tenemos datos compartidos al montar, usarlos inmediatamente
     if (sharedAgents?.length > 0 || sharedAlerts?.length > 0) {
-      console.log('🎯 DATOS COMPARTIDOS DETECTADOS - Calculando estadísticas con datos de Dashboard');
+      console.log('🎯 DATOS COMPARTIDOS YA DISPONIBLES al montar:', {
+        sharedAgents: sharedAgents.length,
+        sharedAlerts: sharedAlerts.length
+      });
+      calculateRealTimeStats();
+    } else {
+      console.log('🔄 No hay datos compartidos al montar, cargando fallback...');
+      fetchFallbackData();
+    }
+  }, []);
+
+  // Efecto CRÍTICO para calcular stats cuando cambien los datos compartidos
+  useEffect(() => {
+    console.log('🎯 useEffect SHARED DATA CHANGE - Datos compartidos cambiaron');
+    console.log('🎯 sharedAgents:', sharedAgents?.length || 0);
+    console.log('🎯 sharedAlerts:', sharedAlerts?.length || 0);
+    
+    if (sharedAgents?.length > 0 || sharedAlerts?.length > 0) {
+      console.log('🔥 FORZANDO cálculo de estadísticas con datos compartidos');
+      calculateRealTimeStats();
+    }
+  }, [sharedAgents, sharedAlerts, calculateRealTimeStats]);
+
+  // Efecto adicional que reacciona a cambios en el contenido de los arrays
+  useEffect(() => {
+    const agentsContent = JSON.stringify(sharedAgents?.map(a => a.id + a.status));
+    const alertsContent = JSON.stringify(sharedAlerts?.map(a => a.id + a.severity));
+    
+    console.log('🎯 CONTENT CHANGE - Contenido de datos compartidos cambió');
+    if (sharedAgents?.length > 0 || sharedAlerts?.length > 0) {
       calculateRealTimeStats();
     }
   }, [sharedAgents, sharedAlerts, calculateRealTimeStats]);

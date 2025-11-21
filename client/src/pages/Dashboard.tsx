@@ -22,6 +22,20 @@ const Dashboard: React.FC = () => {
   const agents = isConnected ? socketAgents : polledAgents;
   const alerts = isConnected ? socketAlerts : polledAlerts;
 
+  // Debug para entender el problema de sincronización
+  console.log('📊 Dashboard RENDER - Estado de datos:', {
+    isConnected,
+    isNetlify,
+    socketAgents: socketAgents?.length || 0,
+    socketAlerts: socketAlerts?.length || 0,
+    polledAgents: polledAgents?.length || 0, 
+    polledAlerts: polledAlerts?.length || 0,
+    finalAgents: agents?.length || 0,
+    finalAlerts: alerts?.length || 0,
+    agentsPassedToSimulation: agents,
+    alertsPassedToSimulation: alerts
+  });
+
   const loadDashboardData = async () => {
     try {
       const promises: Promise<any>[] = [agentService.getSystemStats()];
