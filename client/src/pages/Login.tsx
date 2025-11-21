@@ -57,10 +57,10 @@ const Login: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-white">
-            Blockchain Defense System
+            Sistema Autónomo de Defensa con Agentes AI Descentralizados
           </h2>
           <p className="mt-2 text-sm text-gray-300">
-            Sistema de Defensa con Agentes AI
+            Sistema de Defensa Blockchain con Agentes AI
           </p>
         </div>
 
