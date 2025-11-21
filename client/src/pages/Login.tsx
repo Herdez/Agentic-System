@@ -47,7 +47,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Main Login Card */}
         <div className="bg-white rounded-lg shadow-xl p-8">
@@ -66,7 +66,7 @@ const Login: React.FC = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-purple-400" />
+                  <User className="h-4 w-4 text-blue-400" />
                 </div>
                 <input
                   id="username"
@@ -76,7 +76,7 @@ const Login: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm bg-gray-50 placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-gray-50 placeholder-gray-500"
                   placeholder="Email address"
                 />
               </div>
@@ -88,7 +88,7 @@ const Login: React.FC = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-purple-400" />
+                  <Lock className="h-4 w-4 text-blue-400" />
                 </div>
                 <input
                   id="password"
@@ -98,7 +98,7 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm bg-gray-50 placeholder-gray-500"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm bg-gray-50 placeholder-gray-500"
                   placeholder="Password"
                 />
                 <button
@@ -118,7 +118,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -132,7 +132,7 @@ const Login: React.FC = () => {
           <div className="mt-6 pt-4 text-center">
             <p className="text-sm text-gray-500">
               New to Defense System?{' '}
-              <span className="text-purple-600 hover:text-purple-700 cursor-pointer font-medium">
+              <span className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium">
                 Sign Up
               </span>
             </p>
@@ -144,21 +144,21 @@ const Login: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleDemoLogin('admin')}
-                  className="px-3 py-1 text-xs text-purple-600 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                  className="px-3 py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
                 >
                   Admin
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDemoLogin('analyst')}
-                  className="px-3 py-1 text-xs text-purple-600 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                  className="px-3 py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
                 >
                   Analyst
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDemoLogin('operator')}
-                  className="px-3 py-1 text-xs text-purple-600 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                  className="px-3 py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
                 >
                   Operator
                 </button>
