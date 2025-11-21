@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import { simulationService } from '../services/api';
+import { simulationService, agentService, alertService } from '../services/api';
 
 interface SimulationStats {
   isRunning: boolean;
@@ -30,48 +30,50 @@ const SimulationControl = () => {
     try {
       console.log('🔄 fetchFallbackData iniciado...');
       
-      // En Netlify, usar las Netlify Functions directamente
+      // Usar EXACTAMENTE los mismos servicios que Dashboard para sincronización
       const isNetlify = window.location.hostname.includes('netlify');
       
-      let agentsArray = [];
-      let alertsArray = [];
+      let agentsArray: any[] = [];
+      let alertsArray: any[] = [];
       
       if (isNetlify) {
-        // Para Netlify, usar las mismas rutas que Dashboard (sin ?endpoint=)
-        console.log('🌐 Detectado entorno Netlify, usando mismas rutas que Dashboard...');
-        
-        const agentsResponse = await fetch('/.netlify/functions/api/agents');
-        const agentsText = await agentsResponse.text();
-        console.log('📡 Respuesta raw de agentes:', agentsText.substring(0, 200));
+        // Para Netlify, usar los mismos servicios que Dashboard
+        console.log('🌐 Detectado entorno Netlify, usando MISMOS SERVICIOS que Dashboard...');
         
         try {
-          const agentsData = JSON.parse(agentsText);
-          agentsArray = agentsData?.success ? agentsData.data : (Array.isArray(agentsData) ? agentsData : []);
+          // Usar agentService.getAllAgents() como Dashboard
+          const agentsResponse = await agentService.getAllAgents();
+          console.log('📡 Respuesta agentService:', agentsResponse);
+          agentsArray = agentsResponse?.success ? agentsResponse.data : (Array.isArray(agentsResponse) ? agentsResponse : []);
         } catch (e) {
-          console.error('❌ Error parseando agentes:', e);
+          console.error('❌ Error obteniendo agentes vía agentService:', e);
         }
         
-        const alertsResponse = await fetch('/.netlify/functions/api/alerts');
-        const alertsText = await alertsResponse.text();
-        console.log('📡 Respuesta raw de alertas:', alertsText.substring(0, 200));
-        
         try {
-          const alertsData = JSON.parse(alertsText);
-          alertsArray = alertsData?.success ? alertsData.data : (Array.isArray(alertsData) ? alertsData : []);
+          // Usar alertService.getRecentAlerts(50) como Dashboard
+          const alertsResponse = await alertService.getRecentAlerts(50);
+          console.log('📡 Respuesta alertService:', alertsResponse);
+          alertsArray = alertsResponse?.success ? alertsResponse.data : (Array.isArray(alertsResponse) ? alertsResponse : []);
         } catch (e) {
-          console.error('❌ Error parseando alertas:', e);
+          console.error('❌ Error obteniendo alertas vía alertService:', e);
         }
       } else {
-        // Para desarrollo local
-        console.log('🏠 Detectado entorno local, usando API local...');
+        // Para desarrollo local, usar los mismos servicios
+        console.log('🏠 Detectado entorno local, usando MISMOS SERVICIOS...');
         
-        const agentsResponse = await fetch('/api/agents');
-        const agentsData = await agentsResponse.json();
-        agentsArray = agentsData?.success ? agentsData.data : (Array.isArray(agentsData) ? agentsData : []);
+        try {
+          const agentsResponse = await agentService.getAllAgents();
+          agentsArray = agentsResponse?.success ? agentsResponse.data : (Array.isArray(agentsResponse) ? agentsResponse : []);
+        } catch (e) {
+          console.error('❌ Error obteniendo agentes local:', e);
+        }
         
-        const alertsResponse = await fetch('/api/alerts');
-        const alertsData = await alertsResponse.json();
-        alertsArray = alertsData?.success ? alertsData.data : (Array.isArray(alertsData) ? alertsData : []);
+        try {
+          const alertsResponse = await alertService.getRecentAlerts(50);
+          alertsArray = alertsResponse?.success ? alertsResponse.data : (Array.isArray(alertsResponse) ? alertsResponse : []);
+        } catch (e) {
+          console.error('❌ Error obteniendo alertas local:', e);
+        }
       }
       
       setFallbackAgents(agentsArray);
@@ -80,7 +82,7 @@ const SimulationControl = () => {
       console.log('✅ Datos fallback obtenidos:', { 
         agentes: agentsArray.length, 
         alertas: alertsArray.length,
-        fuente: isNetlify ? 'Netlify Functions' : 'API Local'
+        fuente: isNetlify ? 'agentService/alertService (Netlify)' : 'agentService/alertService (Local)'
       });
       
     } catch (error) {
