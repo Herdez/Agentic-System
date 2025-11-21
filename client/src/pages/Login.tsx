@@ -47,26 +47,26 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-sky-600 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
         {/* Main Login Card */}
-        <div className="bg-white rounded-lg shadow-xl p-12">
+        <div className="bg-white rounded-lg shadow-xl p-8">
           {/* Header */}
-          <div className="text-center mb-10">
-            <h1 className="text-2xl font-normal text-gray-600 mb-2">
+          <div className="text-center mb-8">
+            <h1 className="text-xl font-normal text-gray-500 tracking-wide">
               Log in to your account
             </h1>
           </div>
 
           {/* Login Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm text-gray-600 mb-2 font-medium">
                 Email address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-sky-400" />
+                  <User className="h-4 w-4 text-purple-400" />
                 </div>
                 <input
                   id="username"
@@ -76,19 +76,19 @@ const Login: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition-colors text-sm placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm bg-gray-50 placeholder-gray-500"
                   placeholder="Email address"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm text-gray-600 mb-2 font-medium">
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-sky-400" />
+                  <Lock className="h-4 w-4 text-purple-400" />
                 </div>
                 <input
                   id="password"
@@ -98,7 +98,7 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-sky-500 focus:border-sky-500 transition-colors text-sm placeholder-gray-400"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm bg-gray-50 placeholder-gray-500"
                   placeholder="Password"
                 />
                 <button
@@ -107,9 +107,9 @@ const Login: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
@@ -118,7 +118,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-6"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -128,45 +128,43 @@ const Login: React.FC = () => {
             </button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center text-sm text-gray-500 mb-4">
-              New to Defense System? 
-              <span className="text-sky-600 hover:text-sky-700 cursor-pointer ml-1">
-                Try Demo
+          {/* Footer Section */}
+          <div className="mt-6 pt-4 text-center">
+            <p className="text-sm text-gray-500">
+              New to Defense System?{' '}
+              <span className="text-purple-600 hover:text-purple-700 cursor-pointer font-medium">
+                Sign Up
               </span>
-            </div>
-            <div className="flex justify-center space-x-3">
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('admin')}
-                className="px-4 py-2 text-sm text-sky-600 border border-sky-200 rounded-md hover:bg-sky-50 transition-colors"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('analyst')}
-                className="px-4 py-2 text-sm text-sky-600 border border-sky-200 rounded-md hover:bg-sky-50 transition-colors"
-              >
-                Analyst
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('operator')}
-                className="px-4 py-2 text-sm text-sky-600 border border-sky-200 rounded-md hover:bg-sky-50 transition-colors"
-              >
-                Operator
-              </button>
+            </p>
+            
+            {/* Demo Accounts - Compact */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-400 mb-3">Demo accounts:</p>
+              <div className="flex justify-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin('admin')}
+                  className="px-3 py-1 text-xs text-purple-600 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin('analyst')}
+                  className="px-3 py-1 text-xs text-purple-600 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                >
+                  Analyst
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin('operator')}
+                  className="px-3 py-1 text-xs text-purple-600 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                >
+                  Operator
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6">
-          <p className="text-sm text-white/70">
-            Blockchain Defense System
-          </p>
         </div>
       </div>
     </div>
