@@ -131,8 +131,18 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
     });
     
     if (dataAgents && dataAlerts && dataAgents.length > 0) {
-      // Filtrar agentes activos (todos excepto inactivos)
-      const activeAgents = dataAgents.filter(agent => agent.status !== 'inactive').length;
+      // Filtrar agentes activos (todos excepto 'inactive')
+      // Considerar también 'active', 'monitoring', 'scanning', 'responding', 'investigating'
+      const activeAgents = dataAgents.filter(agent => 
+        agent.status && agent.status !== 'inactive' && agent.status !== 'maintenance'
+      ).length;
+      
+      console.log('🔧 Debug agentes activos:', {
+        total: dataAgents.length,
+        estados: dataAgents.map(a => a.status),
+        activos: activeAgents,
+        criterio: 'status !== "inactive" && status !== "maintenance"'
+      });
       
       // Filtrar solo alertas activas (no resueltas) de la última hora
       const activeAlerts = dataAlerts.filter(alert => alert.status !== 'resolved');
@@ -145,7 +155,7 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
       // Solo alertas críticas activas (no resueltas)
       const criticalAlerts = activeAlerts.filter(alert => alert.severity === 'critical').length;
 
-      const stats = {
+      const newStats = {
         isRunning,
         totalAgents: dataAgents.length,
         activeAgents,
@@ -164,9 +174,21 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
         fuenteDatos: sharedAgents?.length ? 'Dashboard Compartido' : dataAgents === agents ? 'WebSocket' : 'Fallback API'
       });
 
-      // ¡IMPORTANTE! Actualizar el estado con las nuevas estadísticas
-      setStats(stats);
-      return stats;
+      // ¡PROTECCIÓN! Solo actualizar si hay datos válidos
+      if (newStats.totalAgents > 0) {
+        console.log('✅ Actualizando estadísticas con datos válidos:', newStats);
+        setStats(newStats);
+        return newStats;
+      } else {
+        console.warn('⚠️ No se actualizan estadísticas - datos inválidos:', newStats);
+      }
+    } else {
+      console.warn('⚠️ No hay datos suficientes para calcular estadísticas:', {
+        hasAgents: !!dataAgents && dataAgents.length > 0,
+        hasAlerts: !!dataAlerts && dataAlerts.length > 0,
+        agentsLength: dataAgents?.length || 0,
+        alertsLength: dataAlerts?.length || 0
+      });
     }
     return null;
   }, [agents, alerts, isRunning, fallbackAgents, fallbackAlerts, sharedAgents, sharedAlerts]);
@@ -371,23 +393,45 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
       </div>
       
       <div className="card-body">
-        {/* Mostrar valores siempre, con fallback a 0 */}
+        {/* Mostrar información de estado y datos disponibles */}
         <div className="stats-grid">
           <div className="stat-item">
             <span className="stat-label">Agentes Totales:</span>
-            <span className="stat-value">{stats?.totalAgents ?? 0}</span>
+            <span className="stat-value">
+              {(stats?.totalAgents && stats.totalAgents > 0) 
+                ? stats.totalAgents 
+                : (sharedAgents?.length > 0) 
+                  ? sharedAgents.length 
+                  : 0}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Agentes Activos:</span>
-            <span className="stat-value">{stats?.activeAgents ?? 0}</span>
+            <span className="stat-value">
+              {(stats?.activeAgents !== undefined && stats.totalAgents > 0) 
+                ? stats.activeAgents 
+                : (sharedAgents?.length > 0) 
+                  ? sharedAgents.filter(a => a.status !== 'inactive' && a.status !== 'maintenance').length
+                  : 0}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Alertas Recientes:</span>
-            <span className="stat-value">{stats?.recentAlerts ?? 0}</span>
+            <span className="stat-value">
+              {(stats?.recentAlerts !== undefined && stats.totalAgents > 0) 
+                ? stats.recentAlerts 
+                : 0}
+            </span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Alertas Críticas:</span>
-            <span className="stat-value critical">{stats?.criticalAlerts ?? 0}</span>
+            <span className="stat-value critical">
+              {(stats?.criticalAlerts !== undefined && stats.totalAgents > 0) 
+                ? stats.criticalAlerts 
+                : (sharedAlerts?.length > 0) 
+                  ? sharedAlerts.filter(a => a.severity === 'critical' && a.status !== 'resolved').length
+                  : 0}
+            </span>
           </div>
         </div>
 
