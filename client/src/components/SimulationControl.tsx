@@ -7,7 +7,6 @@ interface SimulationStats {
   totalAgents: number;
   activeAgents: number;
   recentAlerts: number;
-  criticalAlerts: number;
   lastUpdate: string;
 }
 
@@ -173,16 +172,12 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
         const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
         return alertTime > hourAgo;
       }).length;
-      
-      // Solo alertas críticas activas (no resueltas)
-      const criticalAlerts = activeAlerts.filter(alert => alert.severity === 'critical').length;
 
       const newStats = {
         isRunning,
         totalAgents: dataAgents.length,
         activeAgents,
         recentAlerts,
-        criticalAlerts,
         lastUpdate: new Date().toISOString()
       };
       
@@ -191,7 +186,6 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
         totalAlertas: dataAlerts.length,
         alertasActivas: activeAlerts.length,
         alertasRecientes: recentAlerts,
-        alertasCriticas: criticalAlerts,
         agentesActivos: activeAgents,
         fuenteDatos: sharedAgents?.length ? 'Dashboard Compartido' : dataAgents === agents ? 'WebSocket' : 'Fallback API'
       });
@@ -469,16 +463,6 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
               {(stats?.recentAlerts !== undefined && stats.totalAgents > 0) 
                 ? stats.recentAlerts 
                 : 0}
-            </span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Alertas Críticas:</span>
-            <span className="stat-value critical">
-              {(stats?.criticalAlerts !== undefined && stats.totalAgents > 0) 
-                ? stats.criticalAlerts 
-                : (sharedAlerts?.length > 0) 
-                  ? sharedAlerts.filter(a => a.severity === 'critical' && a.status !== 'resolved').length
-                  : 0}
             </span>
           </div>
         </div>
