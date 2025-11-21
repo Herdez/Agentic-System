@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Shield, Eye, EyeOff, Loader2, User, Lock } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -47,49 +47,49 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         {/* Main Login Card */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-8">
+        <div className="bg-white rounded-lg shadow-xl p-12">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">
-              Bienvenido
+          <div className="text-center mb-10">
+            <h1 className="text-2xl font-normal text-gray-600 mb-2">
+              Log in to your account
             </h1>
-            <p className="text-sm text-gray-600">
-              Sistema Autónomo de Defensa AI
-            </p>
           </div>
 
           {/* Login Form */}
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Usuario
+                Email address
               </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                placeholder="Ingresa tu usuario"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-purple-400" />
+                </div>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm placeholder-gray-400"
+                  placeholder="Email address"
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Contraseña
+                Password
               </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-purple-400" />
+                </div>
                 <input
                   id="password"
                   name="password"
@@ -98,12 +98,12 @@ const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                  placeholder="Ingresa tu contraseña"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors text-sm placeholder-gray-400"
+                  placeholder="Password"
                 />
                 <button
                   type="button"
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -118,40 +118,43 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <span>Iniciar Sesión</span>
+                <span>Log In</span>
               )}
             </button>
           </form>
 
           {/* Demo Accounts */}
-          <div className="mt-6">
-            <div className="text-center text-xs text-gray-500 mb-4">
-              Cuentas de demostración
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="text-center text-sm text-gray-500 mb-4">
+              New to Defense System? 
+              <span className="text-purple-600 hover:text-purple-700 cursor-pointer ml-1">
+                Try Demo
+              </span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex justify-center space-x-3">
               <button
                 type="button"
                 onClick={() => handleDemoLogin('admin')}
-                className="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                className="px-4 py-2 text-sm text-purple-600 border border-purple-200 rounded-md hover:bg-purple-50 transition-colors"
               >
                 Admin
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('analyst')}
-                className="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                className="px-4 py-2 text-sm text-purple-600 border border-purple-200 rounded-md hover:bg-purple-50 transition-colors"
               >
                 Analyst
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('operator')}
-                className="px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                className="px-4 py-2 text-sm text-purple-600 border border-purple-200 rounded-md hover:bg-purple-50 transition-colors"
               >
                 Operator
               </button>
@@ -161,8 +164,8 @@ const Login: React.FC = () => {
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <p className="text-xs text-white/60">
-            © 2025 Sistema de Defensa Blockchain
+          <p className="text-sm text-white/70">
+            Blockchain Defense System
           </p>
         </div>
       </div>
