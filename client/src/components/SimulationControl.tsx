@@ -18,6 +18,13 @@ const SimulationControl = () => {
   const [fallbackAgents, setFallbackAgents] = useState<any[]>([]);
   const [fallbackAlerts, setFallbackAlerts] = useState<any[]>([]);
 
+  console.log('🔧 SimulationControl montado - Estado inicial:', {
+    isConnected,
+    hasSocketAgents: !!agents?.length,
+    hasSocketAlerts: !!alerts?.length,
+    hostname: window.location.hostname
+  });
+
   // Función para obtener datos cuando WebSocket no está disponible
   const fetchFallbackData = useCallback(async () => {
     try {
@@ -184,6 +191,20 @@ const SimulationControl = () => {
     }
   }, []); // Sin dependencias para evitar re-renders
 
+  // Efecto inicial para cargar datos inmediatamente al montar el componente
+  useEffect(() => {
+    console.log('🔵 PRIMER EFECTO - Ejecutándose inmediatamente al montar');
+    fetchFallbackData();
+  }, [fetchFallbackData]);
+
+  // Efecto para calcular stats cuando cambien los datos de fallback
+  useEffect(() => {
+    if (fallbackAgents.length > 0 || fallbackAlerts.length > 0) {
+      console.log('🟠 Detectado cambio en datos de fallback - calculando estadísticas');
+      calculateRealTimeStats();
+    }
+  }, [fallbackAgents, fallbackAlerts, calculateRealTimeStats]);
+
   // Efecto para cargar datos fallback cuando no hay WebSocket
   useEffect(() => {
     // Detectar inmediatamente si no tenemos WebSocket o si estamos en Netlify
@@ -304,6 +325,12 @@ const SimulationControl = () => {
     }
   }, [fallbackAgents, fallbackAlerts, calculateRealTimeStats]);
 
+  // Debug del estado antes del render
+  console.log('🔍 SimulationControl RENDER - Estado stats:', stats);
+  console.log('🔍 SimulationControl RENDER - fallbackAgents:', fallbackAgents.length);
+  console.log('🔍 SimulationControl RENDER - fallbackAlerts:', fallbackAlerts.length);
+  console.log('🔍 SimulationControl RENDER - isConnected:', isConnected);
+
   return (
     <div className="simulation-control-card">
       <div className="card-header">
@@ -314,26 +341,25 @@ const SimulationControl = () => {
       </div>
       
       <div className="card-body">
-        {stats && (
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-label">Agentes Totales:</span>
-              <span className="stat-value">{stats.totalAgents}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Agentes Activos:</span>
-              <span className="stat-value">{stats.activeAgents}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Alertas Recientes:</span>
-              <span className="stat-value">{stats.recentAlerts}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Alertas Críticas:</span>
-              <span className="stat-value critical">{stats.criticalAlerts}</span>
-            </div>
+        {/* Mostrar valores siempre, con fallback a 0 */}
+        <div className="stats-grid">
+          <div className="stat-item">
+            <span className="stat-label">Agentes Totales:</span>
+            <span className="stat-value">{stats?.totalAgents ?? 0}</span>
           </div>
-        )}
+          <div className="stat-item">
+            <span className="stat-label">Agentes Activos:</span>
+            <span className="stat-value">{stats?.activeAgents ?? 0}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Alertas Recientes:</span>
+            <span className="stat-value">{stats?.recentAlerts ?? 0}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Alertas Críticas:</span>
+            <span className="stat-value critical">{stats?.criticalAlerts ?? 0}</span>
+          </div>
+        </div>
 
         <div className="simulation-info">
           <h4>🛡️ Sistema de Defensa Activo:</h4>
