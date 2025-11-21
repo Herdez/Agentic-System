@@ -220,9 +220,12 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Simulation Control */}
+      {/* Simulation Control - Pasando datos sincronizados */}
       <div className="mb-8">
-        <SimulationControl />
+        <SimulationControl 
+          sharedAgents={agents} 
+          sharedAlerts={alerts}
+        />
       </div>
 
       {/* Main Content Grid */}

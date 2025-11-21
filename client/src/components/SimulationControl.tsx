@@ -11,7 +11,15 @@ interface SimulationStats {
   lastUpdate: string;
 }
 
-const SimulationControl = () => {
+interface SimulationControlProps {
+  sharedAgents?: any[];
+  sharedAlerts?: any[];
+}
+
+const SimulationControl: React.FC<SimulationControlProps> = ({ 
+  sharedAgents = [], 
+  sharedAlerts = [] 
+}) => {
   const [isRunning, setIsRunning] = useState(false);
   const [stats, setStats] = useState<SimulationStats | null>(null);
   const { socket, agents, alerts, isConnected } = useSocket();
@@ -92,20 +100,32 @@ const SimulationControl = () => {
     }
   }, []);
 
-  // Calcular estadísticas en tiempo real desde los datos del socket
+  // Calcular estadísticas en tiempo real desde los datos compartidos o socket
   const calculateRealTimeStats = useCallback(() => {
-    // Usar datos del socket si están disponibles, sino usar fallback
-    const dataAgents = (agents && agents.length > 0) ? agents : fallbackAgents;
-    const dataAlerts = (alerts && alerts.length > 0) ? alerts : fallbackAlerts;
+    // PRIORIDAD: 1. Datos compartidos de Dashboard, 2. WebSocket, 3. Fallback
+    const dataAgents = (sharedAgents && sharedAgents.length > 0) 
+      ? sharedAgents 
+      : (agents && agents.length > 0) 
+        ? agents 
+        : fallbackAgents;
+        
+    const dataAlerts = (sharedAlerts && sharedAlerts.length > 0) 
+      ? sharedAlerts 
+      : (alerts && alerts.length > 0) 
+        ? alerts 
+        : fallbackAlerts;
     
     console.log('🔧 calculateRealTimeStats - Estado de datos:', {
+      sharedAgents: sharedAgents?.length || 0,
+      sharedAlerts: sharedAlerts?.length || 0,
       socketAgents: agents?.length || 0,
       socketAlerts: alerts?.length || 0,
       fallbackAgents: fallbackAgents.length,
       fallbackAlerts: fallbackAlerts.length,
       usingData: {
         agents: dataAgents?.length || 0,
-        alerts: dataAlerts?.length || 0
+        alerts: dataAlerts?.length || 0,
+        source: sharedAgents?.length ? 'Dashboard' : agents?.length ? 'WebSocket' : 'Fallback'
       },
       isConnected
     });
@@ -134,14 +154,14 @@ const SimulationControl = () => {
         lastUpdate: new Date().toISOString()
       };
       
-      // Log para debugging
+      // Log para debugging con fuente correcta
       console.log('🔧 Estadísticas calculadas:', {
         totalAlertas: dataAlerts.length,
         alertasActivas: activeAlerts.length,
         alertasRecientes: recentAlerts,
         alertasCriticas: criticalAlerts,
         agentesActivos: activeAgents,
-        fuenteDatos: dataAgents === agents ? 'WebSocket' : 'Fallback API'
+        fuenteDatos: sharedAgents?.length ? 'Dashboard Compartido' : dataAgents === agents ? 'WebSocket' : 'Fallback API'
       });
 
       // ¡IMPORTANTE! Actualizar el estado con las nuevas estadísticas
@@ -149,7 +169,7 @@ const SimulationControl = () => {
       return stats;
     }
     return null;
-  }, [agents, alerts, isRunning, fallbackAgents, fallbackAlerts]);
+  }, [agents, alerts, isRunning, fallbackAgents, fallbackAlerts, sharedAgents, sharedAlerts]);
 
   // Función para obtener el estado de la simulación - ANTES del useEffect
   const fetchSimulationStatus = useCallback(async () => {
@@ -198,6 +218,14 @@ const SimulationControl = () => {
     console.log('🔵 PRIMER EFECTO - Ejecutándose inmediatamente al montar');
     fetchFallbackData();
   }, [fetchFallbackData]);
+
+  // Efecto para calcular stats cuando cambien los datos compartidos de Dashboard
+  useEffect(() => {
+    if (sharedAgents?.length > 0 || sharedAlerts?.length > 0) {
+      console.log('🎯 DATOS COMPARTIDOS DETECTADOS - Calculando estadísticas con datos de Dashboard');
+      calculateRealTimeStats();
+    }
+  }, [sharedAgents, sharedAlerts, calculateRealTimeStats]);
 
   // Efecto para calcular stats cuando cambien los datos de fallback
   useEffect(() => {
