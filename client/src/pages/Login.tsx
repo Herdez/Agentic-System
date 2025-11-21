@@ -54,7 +54,7 @@ const Login: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-xl font-normal text-gray-500 tracking-wide">
-              BlockShield Agents AI
+              Blockchain Defense System
             </h1>
           </div>
 
