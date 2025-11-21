@@ -139,6 +139,14 @@ const Dashboard: React.FC = () => {
   const criticalAlerts = alerts.filter(alert => alert.severity === 'critical').length;
   const activeAgents = agents.filter(agent => agent.status === 'active').length;
 
+  // Log para debug de sincronización de agentes activos
+  console.log('📊 Dashboard - CÁLCULO DE AGENTES ACTIVOS:', {
+    totalAgents: agents.length,
+    activeAgents,
+    criterio: 'status === "active"',
+    estadosDetallados: agents.map(a => ({_id: a._id, status: a.status}))
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">

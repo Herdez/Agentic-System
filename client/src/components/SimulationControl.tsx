@@ -156,17 +156,14 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
     });
     
     if (dataAgents && dataAlerts && dataAgents.length > 0) {
-      // Filtrar agentes activos (todos excepto 'inactive')
-      // Considerar también 'active', 'monitoring', 'scanning', 'responding', 'investigating'
-      const activeAgents = dataAgents.filter(agent => 
-        agent.status && agent.status !== 'inactive' && agent.status !== 'maintenance'
-      ).length;
+      // USAR EL MISMO CRITERIO QUE DASHBOARD: solo status === 'active'
+      const activeAgents = dataAgents.filter(agent => agent.status === 'active').length;
       
-      console.log('🔧 Debug agentes activos:', {
+      console.log('🔧 Debug agentes activos - SINCRONIZADO CON DASHBOARD:', {
         total: dataAgents.length,
         estados: dataAgents.map(a => a.status),
         activos: activeAgents,
-        criterio: 'status !== "inactive" && status !== "maintenance"'
+        criterio: 'status === "active" (IGUAL QUE DASHBOARD)'
       });
       
       // Filtrar solo alertas activas (no resueltas) de la última hora
@@ -462,7 +459,7 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
               {(stats?.activeAgents !== undefined && stats.totalAgents > 0) 
                 ? stats.activeAgents 
                 : (sharedAgents?.length > 0) 
-                  ? sharedAgents.filter(a => a.status !== 'inactive' && a.status !== 'maintenance').length
+                  ? sharedAgents.filter(a => a.status === 'active').length
                   : 0}
             </span>
           </div>
